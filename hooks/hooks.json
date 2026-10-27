@@ -1,0 +1,28 @@
+{
+  "description": "gg hooks: reload status.md into context at session start, resume and after compaction; confine the gg-qa subagent to tests/qa and godot runs.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/bin/gg-qa-guard\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/bin/gg-session-start\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

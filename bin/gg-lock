@@ -1,0 +1,33 @@
+#!/bin/sh
+# gg-lock acquire|release [project_root]
+# Atomic mkdir lock for writes to .gamedev/roadmap.md and .gamedev/index.md.
+cmd=$1
+root=${2:-.}
+lock="$root/.gamedev/.lock"
+
+case "$cmd" in
+  acquire)
+    i=0
+    while ! mkdir "$lock" 2>/dev/null; do
+      # break a lock older than 10 minutes (crashed session)
+      if [ -n "$(find "$lock" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+        rm -rf "$lock"
+        continue
+      fi
+      i=$((i + 1))
+      if [ "$i" -ge 60 ]; then
+        echo "lock busy: $lock held by $(cat "$lock/owner" 2>/dev/null)" >&2
+        exit 1
+      fi
+      sleep 0.5
+    done
+    echo "${GD_SESSION:-pid-$$} $(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$lock/owner"
+    ;;
+  release)
+    rm -rf "$lock"
+    ;;
+  *)
+    echo "usage: gg-lock acquire|release [project_root]" >&2
+    exit 2
+    ;;
+esac

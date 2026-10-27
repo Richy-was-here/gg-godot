@@ -1,0 +1,19 @@
+{
+  "name": "gg-marketplace",
+  "owner": {
+    "name": "gg"
+  },
+  "metadata": {
+    "description": "Marketplace for the gg Godot workflow plugin"
+  },
+  "plugins": [
+    {
+      "name": "gg",
+      "source": "./",
+      "description": "Godot game-development workflow for Claude Code",
+      "version": "0.1.0",
+      "category": "productivity",
+      "displayName": "Good Games Godot Workflow"
+    }
+  ]
+}
