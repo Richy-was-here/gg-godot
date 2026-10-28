@@ -9,7 +9,8 @@ Single source of truth for the plugin. Commands, roles, templates and hooks are 
 - One source of truth per fact. Reference, never copy. No progress prose. No examples in project documents.
 - Documents only when needed, always from a template. A template is a field list, one line per field.
 - Subagents read only what their task needs.
-- Scripts carry at most two header comment lines (purpose, responsibility). Explanations belong in documents.
+- Scripts carry at most two header comment lines (purpose, responsibility), placed where conventions.md puts the doc comment. Explanations belong in documents.
+- Agents write files with the Write and Edit tools, never with shell redirection (heredocs break on Windows).
 - Official Godot guidelines for the project's Godot version plus software-engineering practice for scalability and correctability.
 - No tooling outside Godot in the game project except justified exceptions. One-off tests and tools are deleted after use; a tool that stays useful is kept and recorded in decisions.md.
 - Text written by or for the plugin uses plain declarative sentences: no metaphors, no lists of three for effect, no "not X but Y" constructions, no bold lead-ins; a claim carries a number or an example or is left out.
@@ -80,8 +81,8 @@ Rules:
 
 | Command | Does | Stops for human |
 |---|---|---|
-| new-project | Onboarding: vision from input, roadmap, decisions, index, status, conventions, config; existing code is indexed; old planning docs read once | contradictions in input; confirmation of the derived state |
-| discuss `<project|milestone|phase>` | grill-me on the target; writes decisions | every question |
+| new-project | Onboarding: vision from input, roadmap, decisions, index, status, conventions, config; existing code is indexed; old planning docs read once; offers a list of similar games after the interview (chat only) | contradictions in input; confirmation of the derived state; similar-games offer |
+| discuss `<project|milestone|phase>` | grill-me on the target; writes decisions; scope by target: project = vision and milestone cut, milestone = the system as a whole, phase = one area in detail; deeper questions are deferred | every question |
 | plan `<phase>` | gg-planner: plans, contracts, waves, decision coverage | never |
 | execute `<phase|plan>` | gg-manager checks out; gg-developer builds; gg-reviewer reads the diff; check-in | reviewer failure after one retry |
 | verify `<phase>` | gg-qa per contract, then the nine gates; collects human checks; failures become a fix plan | never (reports) |

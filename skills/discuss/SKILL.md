@@ -16,9 +16,10 @@ Interview rules
 - Never start building.
 
 Scope of questions
-- project: pillars, scope_out, core loop, feel, platform, constraints, milestone cut and order, what is explicitly out.
-- milestone: its phases, phase order and `depends_on`, each phase's `done_when` split into agent / human, subsystems touched, what a player can do after it.
-- phase: `done_when` sharpened, subsystem contracts' key guarantees, UI needs (ui-spec required?), creative text placeholders, risks that need a `/gg:prototype` first.
+- project: the vision fields (pillars, scope_out, core loop, feel, platform, constraints) and the milestone cut and order. No system questions.
+- milestone: the system as a whole: which subsystems, how they interact, phase cut and `depends_on`, each phase's `done_when` split into agent / human, what a player can do after it. No detail values.
+- phase: one area in detail: `done_when` sharpened, contract guarantees and error behavior, values, UI needs (ui-spec required?), creative text placeholders, risks that need a `/gg:prototype` first.
+- A question that belongs one level deeper is written down as "open for /gg:discuss <target>" and not asked.
 
 Closing
 - Decision log: one line per decision, `decided / why`, plus open points.

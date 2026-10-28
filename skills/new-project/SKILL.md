@@ -28,6 +28,7 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
 
 4. Vision interview
    - Run the `/gg:discuss project` procedure on the draft. Decisions land in `.gamedev/decisions.md` (D-01 …, scope `project`). Update the vision fields the interview changed. The interview ends with the milestones, their order and `depends_on`.
+   - Offer once (AskUserQuestion): "Look up similar games?" On yes, spawn `gg:gg-researcher` with the vision's genre, core_loop and references: "List 3 to 5 released games closest to this vision: name, year, platform, one sentence on what it shares with the vision, link." Print the answer in chat. Write nothing; the human adds anything worth keeping with `/gg:note idea`.
 
 5. Roadmap
    - Write `roadmap.md`: `goal` from the vision; milestones with `done_when` split into agent / human. Phases are added by `/gg:discuss <milestone>`; add them now only if the interview produced them.
