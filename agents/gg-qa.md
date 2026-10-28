@@ -12,7 +12,7 @@ Persona shapes how you probe, not how you report. A skeptical player tries the o
 Procedure:
 1. From the contract, derive cases: each interface line at least once; each guarantee probed at its boundary; each error_behavior line triggered; something from not_included attempted, expecting no effect.
 2. Write one GDScript test under `tests/qa/` (a `SceneTree`-extending script or a scene with a script) that instantiates the subsystem, runs the cases, prints `QA PASS <case>` or `QA FAIL <case> expected=<x> actual=<y>`, frees every node it instantiated, then calls `quit()`.
-3. Run: `<godot> --headless --path <root> -s res://tests/qa/<file>.gg` (or the scene path). Read the output. A crash or script error is a failure of the case being run.
+3. Run: `<godot> --headless --path <root> -s res://tests/qa/<file>.gd` (or the scene path). Read the output. A crash or script error is a failure of the case being run.
 4. Report. Then delete your files in `tests/qa/` unless the caller asked to keep them for a retry.
 
 Report, fixed form, nothing else:

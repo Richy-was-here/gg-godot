@@ -18,15 +18,15 @@ result() { # name status
   return 0
 }
 project_files() { # all source files, excluding engine and plugin dirs
-  find "$root" -type f \( -name '*.gg' -o -name '*.tscn' -o -name '*.tres' -o -name '*.gdshader' \) \
+  find "$root" -type f \( -name '*.gd' -o -name '*.tscn' -o -name '*.tres' -o -name '*.gdshader' \) \
     -not -path '*/.godot/*' -not -path '*/addons/*' -not -path '*/.gamedev/*' -not -path '*/tests/qa/*' \
     | sed "s|^$root/||" | sort
 }
 file_uid() { # uid of a file: sidecar .uid or header attribute
   if [ -f "$root/$1.uid" ]; then cat "$root/$1.uid"; else sed -n '1s/.*uid="\(uid:\/\/[^"]*\)".*/\1/p' "$root/$1" 2>/dev/null; fi
 }
-scripts_touched() { # touched .gg files, or all if none given
-  if [ ${#touched[@]} -gt 0 ]; then printf '%s\n' "${touched[@]}" | grep '\.gg$'; else project_files | grep '\.gg$'; fi
+scripts_touched() { # touched .gd files, or all if none given
+  if [ ${#touched[@]} -gt 0 ]; then printf '%s\n' "${touched[@]}" | grep '\.gd$'; else project_files | grep '\.gd$'; fi
 }
 
 g_load() {
@@ -58,9 +58,9 @@ g_stubs() {
       infn { if ($0 ~ /^[[:blank:]]*pass[[:blank:]]*$/ && body==0) { print "stub (pass-only): " F ": " fn }; infn=0 }
     ' "$root/$f" | sed 's/[[:blank:]]*$//'
     grep -nE 'TODO|FIXME|XXX|not implemented|placeholder' "$root/$f" | sed "s|^|todo: $f:|"
-  done < <(scripts_touched) | tee /tmp/gd_stubs.$$
-  [ -s /tmp/gd_stubs.$$ ] && bad=1
-  rm -f /tmp/gd_stubs.$$
+  done < <(scripts_touched) | tee /tmp/gg_stubs.$$
+  [ -s /tmp/gg_stubs.$$ ] && bad=1
+  rm -f /tmp/gg_stubs.$$
   [ $bad = 0 ] && result stubs PASS || result stubs FAIL
 }
 
@@ -68,9 +68,9 @@ g_leftovers() {
   local bad=0 n
   n=$(find "$root/tests/qa" -type f 2>/dev/null | wc -l)
   [ "$n" -gt 0 ] && { say "tests/qa not empty: $n files"; bad=1; }
-  find "$root" -type f \( -name '*.tmp' -o -name '*.bak' -o -name '*.orig' -o -name '*~' \) -not -path '*/.godot/*' | sed "s|^$root/||; s|^|temp file: |" | tee /tmp/gd_lo.$$
-  [ -s /tmp/gd_lo.$$ ] && bad=1
-  rm -f /tmp/gd_lo.$$
+  find "$root" -type f \( -name '*.tmp' -o -name '*.bak' -o -name '*.orig' -o -name '*~' \) -not -path '*/.godot/*' | sed "s|^$root/||; s|^|temp file: |" | tee /tmp/gg_lo.$$
+  [ -s /tmp/gg_lo.$$ ] && bad=1
+  rm -f /tmp/gg_lo.$$
   [ $bad = 0 ] && result leftovers PASS || result leftovers FAIL
 }
 
@@ -83,12 +83,12 @@ g_artifacts() {
     grep -nE '^[[:blank:]]*#[[:blank:]]*(var |func |if |for |while |return|print|[A-Za-z_]+\(.*\)[[:blank:]]*$|[A-Za-z_.]+[[:blank:]]*=[^=])' "$root/$f" | awk -F: '$1>2' | sed "s|^|commented code: $f:|"
     # unused signals declared here
     for sig in $(grep -oE '^[[:blank:]]*signal[[:blank:]]+[A-Za-z_0-9]+' "$root/$f" | awk '{print $2}'); do
-      refs=$(grep -rlw --include='*.gg' --include='*.tscn' "$sig" "$root" --exclude-dir=.godot --exclude-dir=addons | grep -v "^$root/$f$" | wc -l)
+      refs=$(grep -rlw --include='*.gd' --include='*.tscn' "$sig" "$root" --exclude-dir=.godot --exclude-dir=addons | grep -v "^$root/$f$" | wc -l)
       [ "$refs" = 0 ] && ! grep -qE "$sig\.emit\(|emit_signal\(\"$sig\"" "$root/$f" && say "unused signal: $f: $sig"
     done
-  done < <(scripts_touched) | tee /tmp/gd_art.$$
-  [ -s /tmp/gd_art.$$ ] && bad=1
-  rm -f /tmp/gd_art.$$
+  done < <(scripts_touched) | tee /tmp/gg_art.$$
+  [ -s /tmp/gg_art.$$ ] && bad=1
+  rm -f /tmp/gg_art.$$
   # unreferenced files project-wide
   local main autoloads uid
   main=$(sed -n 's|^run/main_scene="\(.*\)"|\1|p' "$root/project.godot" 2>/dev/null)
@@ -100,9 +100,9 @@ g_artifacts() {
     [ -n "$uid" ] && [ "$main" = "$uid" ] && continue
     printf '%s\n' "$autoloads" | grep -qxF "$f" && continue
     base=$(basename "$f")
-    refs=$(grep -rlF "$base" "$root" --include='*.gg' --include='*.tscn' --include='*.tres' --include='project.godot' --exclude-dir=.godot --exclude-dir=addons --exclude-dir=.gamedev | grep -v "^$root/$f$" | wc -l)
+    refs=$(grep -rlF "$base" "$root" --include='*.gd' --include='*.tscn' --include='*.tres' --include='project.godot' --exclude-dir=.godot --exclude-dir=addons --exclude-dir=.gamedev | grep -v "^$root/$f$" | wc -l)
     if [ "$refs" = 0 ] && [ -n "$uid" ]; then
-      refs=$(grep -rlF "$uid" "$root" --include='*.gg' --include='*.tscn' --include='*.tres' --include='project.godot' --exclude-dir=.godot --exclude-dir=addons --exclude-dir=.gamedev | grep -v "^$root/$f$" | grep -v "^$root/$f.uid$" | wc -l)
+      refs=$(grep -rlF "$uid" "$root" --include='*.gd' --include='*.tscn' --include='*.tres' --include='project.godot' --exclude-dir=.godot --exclude-dir=addons --exclude-dir=.gamedev | grep -v "^$root/$f$" | grep -v "^$root/$f.uid$" | wc -l)
     fi
     [ "$refs" = 0 ] && { say "unreferenced: $f"; bad=1; }
   done < <(project_files)
@@ -115,16 +115,16 @@ g_index() {
   local listed actual
   listed=$(grep -v '^#' "$idx" | awk -F'|' 'NF>=3 {gsub(/^ +| +$/,"",$1); print $1}' | grep -vE '^\.gamedev/' | sort)
   actual=$(project_files)
-  comm -13 <(printf '%s\n' "$listed") <(printf '%s\n' "$actual") | sed 's/^/not in index: /' | tee /tmp/gd_ix.$$
-  comm -23 <(printf '%s\n' "$listed") <(printf '%s\n' "$actual") | sed 's/^/in index, missing on disk: /' | tee -a /tmp/gd_ix.$$
-  [ -s /tmp/gd_ix.$$ ] && bad=1
-  rm -f /tmp/gd_ix.$$
+  comm -13 <(printf '%s\n' "$listed") <(printf '%s\n' "$actual") | sed 's/^/not in index: /' | tee /tmp/gg_ix.$$
+  comm -23 <(printf '%s\n' "$listed") <(printf '%s\n' "$actual") | sed 's/^/in index, missing on disk: /' | tee -a /tmp/gg_ix.$$
+  [ -s /tmp/gg_ix.$$ ] && bad=1
+  rm -f /tmp/gg_ix.$$
   grep -v '^#' "$idx" | awk -F'|' 'NF>=4 {gsub(/ /,"",$4); if ($4!="") print "checked out: " $1 " by " $4}'
   [ $bad = 0 ] && result index PASS || result index FAIL
 }
 
 g_aimarks() {
-  grep -rn --include='*.gg' --include='*.tscn' --include='*.tres' --include='*.csv' --include='*.json' --include='*.po' -F '[AI]' "$root" --exclude-dir=.godot --exclude-dir=.gamedev | sed "s|^$root/||"
+  grep -rn --include='*.gd' --include='*.tscn' --include='*.tres' --include='*.csv' --include='*.json' --include='*.po' -F '[AI]' "$root" --exclude-dir=.godot --exclude-dir=.gamedev | sed "s|^$root/||"
   say "ai-made entries: $(grep -cv '^#' "$root/.gamedev/ai-made.md" 2>/dev/null || echo 0)"
 }
 

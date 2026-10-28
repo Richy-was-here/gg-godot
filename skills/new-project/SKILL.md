@@ -34,7 +34,7 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
    - Existing project: set `status: done` on milestones and phases the old planning documents or the code prove finished. Present this derived state to the human for confirmation before writing it.
 
 6. Index
-   - List every `*.gg`, `*.tscn`, `*.tres`, `*.gdshader` outside `.godot/`, `addons/`, `.gamedev/`. Assign `subsystem` from directory names; ask only when the structure gives no answer. Documents under `.gamedev/` are indexed as `doc`. One line per file. Above 150 lines, split per subsystem as `index/<subsystem>.md` and keep one line per index file in `index.md`.
+   - List every `*.gd`, `*.tscn`, `*.tres`, `*.gdshader` outside `.godot/`, `addons/`, `.gamedev/`. Assign `subsystem` from directory names; ask only when the structure gives no answer. Documents under `.gamedev/` are indexed as `doc`. One line per file. Above 150 lines, split per subsystem as `index/<subsystem>.md` and keep one line per index file in `index.md`.
 
 7. Conventions
    - Spawn `gg:gg-researcher`: "Return the conventions list for Godot <version>: GDScript style guide, project organization, scene organization, signals vs references, resources and data, autoloads from the official documentation; plus `pitfalls`: known traps of this version (at most 20, one line each) from the official docs and the Godot GitHub issues. One rule per line, grouped by the sections of this template: <conventions template>. Include the source URLs and the exact doc version."
