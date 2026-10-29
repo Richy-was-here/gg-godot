@@ -12,7 +12,9 @@ Single source of truth for the plugin. Commands, roles, templates and hooks are 
 - Scripts carry at most two header comment lines (purpose, responsibility), placed where conventions.md puts the doc comment. Explanations belong in documents.
 - Agents write files with the Write and Edit tools, never with shell redirection (heredocs break on Windows).
 - Official Godot guidelines for the project's Godot version plus software-engineering practice for scalability and correctability.
-- No tooling outside Godot in the game project except justified exceptions. One-off tests and tools are deleted after use; a tool that stays useful is kept and recorded in decisions.md.
+- No tooling outside Godot in the game project except justified exceptions. One-off tests and tools live under `tests/qa/` and are deleted after use; a tool that stays useful is kept, indexed and recorded in decisions.md.
+- A command that fails twice with the same output is not run a third time; the agent stops and reports.
+- Logging uses `push_error` / `push_warning`; `print` is debug output and fails verify.
 - Text written by or for the plugin uses plain declarative sentences: no metaphors, no lists of three for effect, no "not X but Y" constructions, no bold lead-ins; a claim carries a number or an example or is left out.
 - Subsystems are developed as isolated as possible.
 - Creative in-game text (dialogue, notes, lore) is placeholder only, marked `[AI]` inside the text. Factual text (UI labels, tooltips, system messages) is plain, unmarked. AI-made graphics and sounds are tracked in `ai-made.md`.
@@ -56,7 +58,7 @@ Field lists in `templates/`. Rules:
 - ui-spec — style, palette, typography, layout rules, components, motion, sound cues. Changeable at any time.
 - ai-made — path, kind (sprite | sound | music | other), created, replaced_by.
 - notes — date, kind (marketing | idea), line.
-- config — godot_bin, test_dir, shared_files, godot_version.
+- config — godot_bin, godot_version, test_dir, allowed_warnings, shared_files.
 
 ## 4. Roles
 
@@ -68,12 +70,12 @@ Field lists in `templates/`. Rules:
 | gg-researcher | sonnet | web, Godot docs | nothing | WebSearch, WebFetch, Read |
 | gg-developer | sonnet | its plan, its contracts, its checked-out files, conventions | its checked-out files only | Read, Write, Edit, Bash, Glob, Grep, Task |
 | gg-reviewer | opus | the diff, contracts, conventions | nothing | Read, Bash, Grep, Glob |
-| gg-qa | sonnet | one contract | tests/qa/ only | Write, Bash (both confined by the plugin PreToolUse hook `bin/gg-qa-guard`, which acts only when `agent_type` is gg-qa) |
+| gg-qa | sonnet | one contract | tests/qa/ only | Write, Bash (allowlist in the plugin PreToolUse hook `bin/gg-qa-guard`: writes under tests/qa/, Bash only Godot runs and ls/cat/rm/mkdir on tests/qa/ paths; acts only when `agent_type` is gg-qa) |
 
 Rules:
 - Only gg-manager writes roadmap, index and status. Only gg-planner writes contracts and plans. Only the human (via gg-manager) changes the vision.
 - gg-developer commits with explicit paths from its plan, never the whole tree. Commit message starts with the plan id.
-- gg-qa has no access to code or documents. Its test scene or script lives in `tests/qa/`, runs headless, and is deleted after verify. Persona is rotated by `verify` per contract (skeptical player, speedrunner, completionist, confused newcomer); the report format is fixed: steps, expected, actual.
+- gg-qa has no access to code or documents. Its test scene or script lives in `tests/qa/`, runs headless, and is deleted after verify. Every QA run hunts for exploits: boundary values, rapid repeats, wrong call order, empty inputs, state combinations. At milestone end QA runs the whole system against all contracts and compares observed behavior with the vision text it is handed; the reviewer then reads the whole codebase against conventions and contracts. Persona is rotated by `verify` per contract (skeptical player, speedrunner, completionist, confused newcomer); the report format is fixed: steps, expected, actual.
 - gg-researcher returns its answer to the caller with sources. It writes no document. Findings that are decisions go to decisions.md via the caller; rules for all projects go to the plugin.
 - gg-producer is called on every feature request outside the roadmap and at every milestone completion. It measures against `pillars` and `scope_out`. The human has the last word.
 
@@ -89,7 +91,7 @@ Rules:
 | next | next logical step; stops after plan; refuses to complete a milestone with open human checks | after plan; open human checks at milestone end |
 | autonomous `<goal>` | runs discuss-less plan → execute → verify to the goal; collects human checks; waves run in parallel | decision needed; blocker after one retry |
 | review | human verdict on collected human checks; failures become tasks | every item |
-| complete-milestone | gg-producer vision check; `[AI]` and ai-made listing; git tag; marketing question | open human checks; marketing question |
+| complete-milestone | gg-qa in milestone mode (all contracts, main scene, vision; persona breaker), gg-reviewer in milestone mode (whole codebase against conventions and contracts), gg-producer vision check; `[AI]` and ai-made listing; git tag; marketing question | open human checks; drift; marketing question |
 | feature `<wish>` | gg-producer verdict; on acceptance: decision + roadmap entry | always |
 | quick `<task>` | planner and developer in one; check-out/in; reviewer | never |
 | debug `<symptom>` | gg-developer with error entry point; check-out/in | never |
@@ -124,13 +126,13 @@ Commits
 - `undo` selects commits by the plan id prefix.
 
 Verify gates (all hard)
-1. Project loads headless without errors or warnings
+1. Project loads headless without errors or warnings; a main scene must be set; warnings listed under `allowed_warnings` in config.md are accepted
 2. All scripts parse
-3. No stubs in touched files: empty bodies, `pass`-only functions, TODO/FIXME, placeholder returns
-4. QA report present with no open failure
+3. No stubs in touched files: empty bodies, `pass`-only functions, TODO/FIXME
+4. QA report present with no open failure; a QA run that could not execute is a FAIL, never a skip
 5. Every decision assigned to the phase is traceable in the diff
 6. All check-outs of the phase are checked in; index matches the file system
-7. One-off tests and tools are deleted; `tests/qa/` is empty
+7. One-off tests and tools are deleted; `tests/qa/` is empty; any other file under `tests/` is listed in the index
 8. Roadmap `done_when` (agent side) all met; human side listed to the human
 9. No artifacts: unreferenced files, debug prints, commented-out code, temp files, unused signals and exports in touched files
 

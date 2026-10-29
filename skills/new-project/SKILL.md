@@ -13,6 +13,7 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
    - `.gamedev/status.md` exists: stop, "already onboarded; use /gg:status".
    - `project.godot` missing: ask whether to create a minimal one (name, Godot version, main scene later) or stop.
    - Read the Godot version from `project.godot` (`config/features`).
+   - `run/main_scene` missing: ask which scene is the main scene, or create an empty `scenes/main.tscn` (root Node2D or Node3D as the vision says) and set it. The load gate needs it.
    - `git rev-parse` fails: ask to run `git init`; gg needs commits.
 
 2. Input

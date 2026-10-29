@@ -9,7 +9,7 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent yo
 Phase: $ARGUMENTS. Godot binary and `test_dir` from `.gamedev/config.md`. Plans: `.gamedev/plans/<phase>/*.md`.
 
 1. Touched files: union of `files.new` and `files.modified` over the phase's plans. Contracts: union of `contracts`.
-2. QA (gate 4). For each contract, spawn `gg:gg-qa` with: the contract text (read it and pass it verbatim), project root, Godot binary, `tests/qa/`, the scene or class to instantiate (from the contract's interface or the plan's files), and a persona rotated from: skeptical player, speedrunner, completionist, confused newcomer. Keep each report.
+2. QA (gate 4). For each contract, spawn `gg:gg-qa` with: the contract text (read it and pass it verbatim), project root, Godot binary, `tests/qa/`, the scene or class to instantiate (from the contract's interface or the plan's files), and a persona rotated from: skeptical player, speedrunner, completionist, confused newcomer. Keep each report. A QA run that could not execute (guard refusal, Godot error, missing contract) is a FAIL of gate 4 with that reason; it is never skipped.
 3. Gates 1, 2, 3, 7, 9, 6: `bash ${CLAUDE_PLUGIN_ROOT}/bin/gg-check all . <touched files>`. Gate 7 also requires `tests/qa/` to hold only `.gdignore`.
 4. Gate 5 (decisions): for every `D-NN` in the plans' `decisions`, confirm a commit or diff hunk of this phase realizes it (`git log --grep` by plan id, then the diff). An unrealized decision fails the gate.
 5. Gate 8 (done_when): every `agent` criterion of the phase in `roadmap.md` is checked by running the check it names or by inspecting the result; every `human` criterion is collected.

@@ -30,10 +30,16 @@ scripts_touched() { # touched .gd files, or all if none given
 }
 
 g_load() {
+  if ! grep -q '^run/main_scene=' "$root/project.godot" 2>/dev/null; then
+    result load FAIL; say "no main scene set in project.godot (run/main_scene); set one, then rerun"; return
+  fi
   local out
   out=$("$godot" --headless --path "$root" --quit-after 2 2>&1); local rc=$?
-  local bad
+  local bad allow pat
+  allow=$(sed -n '/^allowed_warnings:/,/^[a-z_]*:/p' "$cfg" 2>/dev/null | grep -E '^  - ' | sed 's/^  - //' | grep -v '^<')
   bad=$(printf '%s\n' "$out" | grep -E '^(ERROR|WARNING|SCRIPT ERROR|USER ERROR|USER WARNING)')
+  while read -r pat; do [ -n "$pat" ] && bad=$(printf '%s\n' "$bad" | grep -vF -- "$pat"); done <<< "$allow"
+  bad=$(printf '%s\n' "$bad" | grep -v '^$')
   if [ $rc = 0 ] && [ -z "$bad" ]; then result load PASS; else result load FAIL; say "exit code: $rc"; printf '%s\n' "$out" | head -40; fi
 }
 
@@ -57,7 +63,7 @@ g_stubs() {
       infn && /^[[:blank:]]*#/ { next }
       infn { if ($0 ~ /^[[:blank:]]*pass[[:blank:]]*$/ && body==0) { print "stub (pass-only): " F ": " fn }; infn=0 }
     ' "$root/$f" | sed 's/[[:blank:]]*$//'
-    grep -nE 'TODO|FIXME|XXX|not implemented|placeholder' "$root/$f" | sed "s|^|todo: $f:|"
+    grep -nE 'TODO|FIXME|XXX|not implemented' "$root/$f" | sed "s|^|todo: $f:|"
   done < <(scripts_touched) | tee /tmp/gg_stubs.$$
   [ -s /tmp/gg_stubs.$$ ] && bad=1
   rm -f /tmp/gg_stubs.$$
@@ -66,8 +72,13 @@ g_stubs() {
 
 g_leftovers() {
   local bad=0 n
-  n=$(find "$root/tests/qa" -type f 2>/dev/null | wc -l)
+  n=$(find "$root/tests/qa" -type f -not -name '.gdignore' 2>/dev/null | wc -l)
   [ "$n" -gt 0 ] && { say "tests/qa not empty: $n files"; bad=1; }
+  find "$root/tests" -type f -not -path '*/tests/qa/*' -not -name '.gdignore' -not -name '*.uid' 2>/dev/null | sed "s|^$root/||" | while read -r f; do
+    grep -qF "$f |" "$root/.gamedev/index.md" 2>/dev/null || say "test file not in index (one-off tests belong in tests/qa): $f"
+  done | tee /tmp/gg_lt.$$
+  [ -s /tmp/gg_lt.$$ ] && bad=1
+  rm -f /tmp/gg_lt.$$
   find "$root" -type f \( -name '*.tmp' -o -name '*.bak' -o -name '*.orig' -o -name '*~' \) -not -path '*/.godot/*' | sed "s|^$root/||; s|^|temp file: |" | tee /tmp/gg_lo.$$
   [ -s /tmp/gg_lo.$$ ] && bad=1
   rm -f /tmp/gg_lo.$$

@@ -23,7 +23,7 @@ Rules:
 - Prefer signals over hard references across subsystems, Resources for data, scenes as the unit of composition. Follow conventions.md over habit.
 - Creative text: placeholder with the literal `[AI]` inside the text. Factual text: plain.
 - Any graphic or sound you create: one line in `.gamedev/ai-made.md` in the same commit (create it from the template if missing).
-- A test or helper you create for yourself is deleted before the task's commit.
+- A test or helper you create for yourself lives under `tests/qa/` and is deleted before the task's commit.
 - Spawn `gg:gg-researcher` only when stuck on an engine question. Do not browse.
 
 Report at the end, ten lines at most: tasks done with commit hashes, verify results, anything stopped or deviating, files touched.
