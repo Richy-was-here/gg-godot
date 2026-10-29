@@ -1,6 +1,6 @@
 {
   "name": "gg",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Godot game-development workflow for Claude Code: team roles, roadmap with milestones and phases, file check-out/check-in, nine verify gates, autonomous runs with human checks collected.",
   "license": "MIT",
   "keywords": [
