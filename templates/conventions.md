@@ -1,6 +1,6 @@
 # conventions
 godot_version: <from project.godot>
-source: <official docs URLs used>
+source: <at most 5 URLs: official docs pages, plus the Godot GitHub issues link when pitfalls cite issue numbers>
 fetched: YYYY-MM-DD
 gdscript:
   - <rule, one line>

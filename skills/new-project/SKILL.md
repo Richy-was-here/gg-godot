@@ -4,7 +4,7 @@ description: Onboard a Godot project into gg. Consolidates any input into a visi
 argument-hint: "[text, file paths, or nothing] [--conventions]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, AskUserQuestion, WebFetch
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. No examples, no prose except `vision.notes`.
 
@@ -39,13 +39,13 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
    - List every `*.gd`, `*.tscn`, `*.tres`, `*.gdshader` outside `.godot/`, `addons/`, `.gamedev/`. Assign `subsystem` from directory names; ask only when the structure gives no answer. Documents under `.gamedev/` are indexed as `doc`. One line per file. Above 150 lines, split per subsystem as `index/<subsystem>.md` and keep one line per index file in `index.md`.
 
 7. Conventions
-   - Spawn `gg:gg-researcher`: "Return the conventions list for Godot <version>: GDScript style guide, project organization, scene organization, signals vs references, resources and data, autoloads from the official documentation; plus `pitfalls`: known traps of this version (at most 20, one line each) from the official docs and the Godot GitHub issues. One rule per line, grouped by the sections of this template: <conventions template>. Include the source URLs and the exact doc version."
+   - Spawn `gg:gg-researcher`: "Return the conventions list for Godot <version>: GDScript style guide, project organization, scene organization, signals vs references, resources and data, autoloads from the official documentation; plus `pitfalls`: known traps of this version (at most 20, one line each) from the official docs and the Godot GitHub issues. One rule per line, grouped by the sections of this template: <conventions template>. Cite at most 5 source URLs: the doc pages most rules come from, plus the Godot GitHub issues link when pitfalls cite issue numbers. Give the exact doc version."
    - Write `conventions.md` from the answer. `project_specific` stays empty unless the human adds rules now.
    - `--conventions`: run only this step, keeping `project_specific`; used after a Godot version change.
 
 8. Config and status
    - `config.md`: `godot_bin` (`which godot` or ask), `godot_version`, `test_dir: tests/qa`, `shared_files` (project.godot, autoload scripts found in `[autoload]`, input map files).
-   - `status.md` from the template with empty `active`.
+   - `status.md` and `human-checks.md` from the templates, `active` empty.
    - Create `.gamedev/.gdignore` (empty) and `tests/qa/.gdignore` (empty). Add `.gamedev/.lock/` to `.gitignore`.
    - Offer once (AskUserQuestion): add permission rules to `.claude/settings.local.json` so agents run without prompts: `Bash(git *)`, `Bash(<godot_bin> *)`, `Bash(gg-check *)`, `Bash(gg-lock *)`, `Bash(*/bin/gg-check *)`, `Bash(*/bin/gg-lock *)`, `Bash(rm tests/qa/*)`. Without them every agent Bash call asks; `/gg:autonomous` cannot run unattended.
    - Commit: `git add .gamedev .gitignore tests/qa/.gdignore` then `git commit -m "gg: onboarding"`.
@@ -53,4 +53,5 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
 9. Existing project only
    - Ask whether `.planning/` and `.gsd/` may be deleted now that their content is in `.gamedev/`. Delete only on yes.
 
-10. Report in five lines: files created, milestones, index size, Godot version, next command (`/gg:discuss <first milestone>`).
+10. Report in four lines: files created, milestones, index size, Godot version.
+Last line, always, also after a blocker: `State saved. /clear is safe. Next: `/gg:discuss <first milestone>``.

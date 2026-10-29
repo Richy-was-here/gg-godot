@@ -12,7 +12,7 @@ Read, in this order and only as far as needed: the phase entry in `.gamedev/road
 Procedure:
 1. Derive the phase's `done_when` into deliverables. Split into plans so that each plan touches 1 to 6 files and one subsystem where possible.
 2. For each plan: `files` (exact paths, new and modified), `decisions` (the D-NN it implements), `contracts` (created or changed), tasks with `action` (directive, no code blocks, no rationale), `verify` (a `godot --headless` run, a QA scene, or a grep an agent can execute), `done` (measurable state).
-3. Anything only the human can judge (look, sound, feel, fun) goes to `human_checks`, never to `verify`.
+3. Anything only the human can judge (look, sound, feel, fun) goes to `human_checks`, never to `verify`. One criterion per line, at most 80 characters; values and reasons stay in the task.
 4. `depends_on` between plans; then `wave` = 1 + max wave of dependencies. Plans in the same wave with overlapping files or any `config.shared_files` file get separate waves.
 5. Write or update contracts for every subsystem the phase creates or changes. The contract is what QA will test blind: interface, guarantees, error_behavior, not_included must be complete.
 6. Coverage: every decision assigned to this phase appears in some plan's `decisions`. A decision that fits no plan is reported, not dropped.

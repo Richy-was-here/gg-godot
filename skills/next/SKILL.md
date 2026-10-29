@@ -11,7 +11,7 @@ Read `.gamedev/status.md` and `.gamedev/roadmap.md`. Session id: see `/gg:resume
 4. An active phase, all plans built, not verified → `/gg:verify <phase>`.
 5. An active phase with a fix plan not built → `/gg:execute <fix plan>`, then `/gg:verify`.
 6. No active phase for this session:
-   - a milestone with all phases `done` and `status: active`: if `open_human_checks` contains any of its phases → say "run /gg:review first", stop; else → say "run /gg:complete-milestone <id>", stop.
+   - a milestone with all phases `done` and `status: active`: if `open_human_checks` lists any of its phases with a count above 0 → say "run /gg:review first", stop; else → say "run /gg:complete-milestone <id>", stop.
    - else the lowest planned phase whose `depends_on` are all `done` and whose milestone is `active` or has all `depends_on` done. Phase has no `done_when` yet → `/gg:discuss <phase>` first. Else → `/gg:plan <phase>`, which stops after planning.
 7. Nothing left → "roadmap complete".
 

@@ -30,6 +30,7 @@ Single source of truth for the plugin. Commands, roles, templates and hooks are 
     decisions.md       created by new-project
     index.md           created by new-project; split into index/<subsystem>.md above 150 lines
     status.md          created by new-project; fixed fields, overwritten
+    human-checks.md    created by new-project; criteria only the human can judge, one line each
     conventions.md     created by new-project from official Godot docs for the project's version
     ui-spec.md         created before the first phase with visible UI
     ai-made.md         created at the first AI-made asset; read on request only
@@ -51,7 +52,8 @@ Field lists in `templates/`. Rules:
 - roadmap — goal; milestones with id, name, depends_on, status, done_when (agent / human); phases with id, name, goal, depends_on, status, session, done_when (agent / human). Status lives here, nowhere else. Milestones are numbered for direction; `depends_on` decides what may run in parallel.
 - decisions — D-NN, date, scope (project | milestone | phase id), decision, supersedes. Never deleted; superseded entries are marked.
 - index — one line per file: path, kind (script | scene | resource | doc | other), subsystem, checked_out_by, checked_out_at. No descriptions.
-- status — active phases (one block per session): phase, plan, task, last_done, next_step; open human checks; blockers. Overwritten at every check-in.
+- status — active phases (one block per session): phase, plan, task, last_done (one id and one status word), next_step (one `/gg:` command); open human checks as a count per phase; blockers (tool or gate, symptom, ids, decision id). Overwritten at every check-in. Text that does not fit a field is refused by gg-manager.
+- human-checks — phase or plan id, criterion (copied unchanged from the plan or the roadmap, at most 80 characters), status (open | later). Read by review, complete-milestone and autonomous only.
 - plan — phase, plan, wave, depends_on, files, decisions, contracts, objective, tasks (name, files, action, verify, done), human_checks. `action` contains no code blocks. `verify` is a command or check an agent can run; otherwise it belongs in `human_checks`.
 - contract — name, subsystem, purpose, interface (one line per public function and signal), guarantees, error_behavior, dependencies, not_included.
 - conventions — one rule per line, derived from the official Godot documentation matching the version in `project.godot`, plus `pitfalls` (at most 20 known traps of that version from docs and GitHub issues); refreshed with `new-project --conventions` after a version change, which `status` detects. Plugin-wide rules in `rules/plugin-rules.md` are not copied here.
@@ -113,13 +115,14 @@ Check-out / check-in
 - Shared files (`config.shared_files`, default: project.godot, autoloads, input map) are touched only by gg-manager or strictly sequentially.
 
 Locking
-- Every write to roadmap.md and index.md is wrapped in `gg-lock acquire` / `gg-lock release` (atomic mkdir; a lock older than 10 minutes is broken). Wait up to 30 s, then report.
+- Every write to roadmap.md and index.md is wrapped in `gg-lock acquire <root> <session id>` / `gg-lock release <root> <session id>` (atomic mkdir; the lock records its holder; release by another session is refused; a lock older than 10 minutes is broken). Wait up to 30 s, then report.
 
 Two sessions
-- Shared working directory. A session claims a phase by setting `status: active` and `session` in roadmap.md under the lock. Two sessions never share a phase. Index check-outs carry the session id.
+- Shared working directory. A session claims a phase by setting `status: active` and `session` in roadmap.md under the lock; the first claim inside a milestone sets the milestone `active`. Two sessions never share a phase. Index check-outs carry the session id.
 
 Handoff
 - status.md is always current at claim and check-in. A SessionStart hook (startup, resume, compact) prints status.md and the session id into context. `/gg:resume` continues from it.
+- Every command that changes state ends with the line `State saved. /clear is safe. Next: <command>`, also after a blocker; the phase then stays `active` and `Next` names the command to run again.
 
 Commits
 - One commit per task, paths explicit, message `<phase>-<plan>: <task name>`. gg-manager commits `.gamedev/` changes as `<id>: state` after claim, after planning and at check-in; nothing else touches `.gamedev/` in git.

@@ -4,7 +4,7 @@ description: Fix a bug from a symptom: reproduce headless, locate, fix within ch
 argument-hint: "<symptom, error text, or steps>"
 allowed-tools: Read, Bash, Grep, Glob, Agent, AskUserQuestion
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Symptom: $ARGUMENTS. Session id: see `/gg:resume`.
 
@@ -15,3 +15,4 @@ Symptom: $ARGUMENTS. Session id: see `/gg:resume`.
 5. `gg:gg-reviewer` on the commit range; one fix round.
 6. `gg:gg-manager`: check in. If the cause was a wrong guarantee in a contract, append a decision `D-NN | date | <phase of the subsystem> | <guarantee corrected> | -` and tell the human the planner must update the contract.
 7. Report: cause, commit, files, follow-up if any.
+Last line, always, also after a blocker: `State saved. /clear is safe. Next: `/gg:next` or the follow-up command`.

@@ -10,7 +10,7 @@
 - Commit per task; `git add` with explicit paths from the plan only; message `<plan id>: <task name>`.
 - Write only files checked out to you. A needed file that is not checked out: stop and report.
 - A contract that does not fit: stop and report. Never change a contract as a developer.
-- No code blocks in plan actions. No examples in documents. No progress prose anywhere.
+- No code blocks in plan actions. No examples in documents.
 - Write and change files with the Write and Edit tools only, never with shell redirection or heredocs.
 - Documents only from templates in `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names unchanged.
 - English in code, comments and documents. In-game text in the game's language.

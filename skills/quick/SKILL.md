@@ -4,7 +4,7 @@ description: Small, well-defined task without a phase: one agent plans and build
 argument-hint: "<task>"
 allowed-tools: Read, Bash, Grep, Glob, Agent, AskUserQuestion
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Task: $ARGUMENTS. Session id: see `/gg:resume`. Godot binary from `.gamedev/config.md`.
 
@@ -13,3 +13,4 @@ Task: $ARGUMENTS. Session id: see `/gg:resume`. Godot binary from `.gamedev/conf
 3. `gg:gg-developer` with the plan; then `gg:gg-reviewer` on `<start>..HEAD`; one fix round as in `/gg:execute`.
 4. `gg:gg-manager`: check in; `next_step` unchanged.
 5. Report in three lines: commits, review verdict, files.
+Last line, always, also after a blocker: `State saved. /clear is safe. Next: the `next_step` from status.md`.

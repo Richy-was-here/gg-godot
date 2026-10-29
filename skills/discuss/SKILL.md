@@ -4,7 +4,7 @@ description: Grill-me interview on the project, a milestone or a phase. One ques
 argument-hint: "project | <milestone id> | <phase id>"
 allowed-tools: Read, Write, Edit, Grep, Glob, Agent, AskUserQuestion
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Target: $ARGUMENTS. Read `.gamedev/vision.md`, `.gamedev/decisions.md`, and the target's entry in `.gamedev/roadmap.md`. For a phase also read existing contracts of its subsystems.
 
@@ -28,4 +28,4 @@ Closing
 - milestone: write the phases with `goal`, `depends_on`, `done_when` into `roadmap.md`.
 - phase: update its `done_when`; a UI need without `ui-spec.md` creates `ui-spec.md` from the template now, filled from the answers.
 - Roadmap writes go through `gg:gg-manager` so the lock is held.
-- Last line: the next command (`/gg:plan <phase>` or `/gg:discuss <next target>`).
+- Last line, always, also after a blocker: `State saved. /clear is safe. Next: `/gg:plan <phase>` or `/gg:discuss <next target>``.

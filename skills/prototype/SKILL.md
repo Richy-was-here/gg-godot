@@ -4,7 +4,7 @@ description: Try an idea as a throwaway scene before planning it: build fast out
 argument-hint: "<idea to feel out>"
 allowed-tools: Read, Bash, Grep, Glob, Agent, AskUserQuestion
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Idea: $ARGUMENTS. Branch: `proto/<slug>` from the current commit.
 
@@ -14,4 +14,5 @@ Idea: $ARGUMENTS. Branch: `proto/<slug>` from the current commit.
 4. Ask: keep direction | drop | iterate (then one more developer round, back to 3).
 5. Record: append `D-NN | date | project | prototype <slug>: <verdict in one line> | -` to `.gamedev/decisions.md` on `main`.
 6. `git switch main` and `git branch -D proto/<slug>`. Nothing from the prototype is merged; what is kept is the decision, and the planner builds it properly in a phase.
-7. Report: verdict, decision id, next command (`/gg:feature` or `/gg:discuss <phase>`).
+7. Report: verdict, decision id.
+Last line, always, also after a blocker: `State saved. /clear is safe. Next: `/gg:feature <idea>` or `/gg:discuss <phase>``.

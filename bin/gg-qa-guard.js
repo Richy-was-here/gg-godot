@@ -10,7 +10,7 @@ process.stdin.on("end", () => {
   const tool = String(j.tool_name || "");
   const input = j.tool_input || {};
   const norm = (p) => String(p).replace(/\\/g, "/").replace(/^[A-Za-z]:/, "");
-  const inQa = (p) => /(^|\/)tests\/qa\//.test(norm(p).replace(/^res:\/\//, "/"));
+  const inQa = (p) => { const n = norm(p).replace(/^res:\/\//, "/"); return /(^|\/)tests\/qa\//.test(n) && !/(^|\/)\.\.(\/|$)/.test(n); };
   const block = (msg) => { process.stderr.write("gg-qa: " + msg + "\n"); process.exit(2); };
 
   if (/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(tool)) {

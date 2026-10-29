@@ -11,7 +11,7 @@
       "name": "gg",
       "source": "./",
       "description": "Godot game-development workflow for Claude Code",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "category": "productivity",
       "displayName": "Good Games Godot Workflow"
     }

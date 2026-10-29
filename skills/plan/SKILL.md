@@ -4,7 +4,7 @@ description: Plan one phase: claim it, spawn the planner, show plans, contracts,
 argument-hint: "<phase id> [--auto]"
 allowed-tools: Read, Bash, Grep, Glob, Agent, AskUserQuestion
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Phase: first token of $ARGUMENTS. Session id: see `/gg:resume`.
 
@@ -15,4 +15,4 @@ Phase: first token of $ARGUMENTS. Session id: see `/gg:resume`.
 5. The planner reports "ui-spec needed": run the `/gg:discuss <phase>` closing step for the UI, then return to 3.
 6. `gg:gg-manager`: "commit state <phase>" (plans and contracts).
 7. Show: plan ids with wave and file count, contracts written or changed, `human_checks` collected. Point to `.gamedev/plans/<phase>/`.
-8. Stop. Last line: `/gg:execute <phase>` or `/gg:next`. With `--auto` (used by `/gg:autonomous`) continue directly into `/gg:execute <phase>`.
+8. Stop. Last line, always, also after a blocker: `State saved. /clear is safe. Next: `/gg:execute <phase>` or `/gg:next``. With `--auto` (used by `/gg:autonomous`) continue directly into `/gg:execute <phase>` instead.

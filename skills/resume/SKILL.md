@@ -3,7 +3,7 @@ name: resume
 description: Continue work from status.md after a compaction, a restart or a new session.
 allowed-tools: Read, Bash, Grep, Agent
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Session id: the `session=` value printed by the gg hook at session start; if none was printed, create one as `date +%Y%m%d-%H%M%S` and use it for the rest of this session.
 

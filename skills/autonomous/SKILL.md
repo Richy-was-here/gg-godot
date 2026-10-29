@@ -4,7 +4,7 @@ description: Run unattended to a goal (milestone or phase id): plan, execute wit
 argument-hint: "<milestone id | phase id>"
 allowed-tools: Read, Bash, Grep, Glob, Agent
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Goal: $ARGUMENTS. Session id: see `/gg:resume`. Mode flags for the procedures you call: `plan --auto`, `execute faster`, verify in autonomous mode.
 
@@ -21,8 +21,9 @@ Stop conditions, each ends the run immediately with the report below:
 
 Never ask the human during the run. Never write to vision.md or decisions.md yourself. Never run complete-milestone.
 
-Final report (also written by `gg:gg-manager` into `status.md` `next_step` as one line):
+Final report:
 - phases done: ids with plan counts
-- human checks waiting: numbered, grouped by phase (`/gg:review`)
+- human checks waiting: count per phase from `status.md` (`/gg:review` shows them)
 - stop reason: goal reached | decision: <question> | blocker: <what>
-- next command
+A blocker goes to `gg:gg-manager` as "blocker <tool or gate> <symptom>; <ids>". `next_step` in status.md is the command named below, nothing else.
+Last line, always, also after a blocker: `State saved. /clear is safe. Next: <the command for the stop reason: `/gg:review`, `/gg:discuss <id>`, or the failed command again>`.

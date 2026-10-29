@@ -16,4 +16,4 @@ tasks:
     verify: <command or check an agent can run>
     done: <measurable end state>
 human_checks:
-  - <criterion only the human can judge>
+  - <criterion only the human can judge, at most 80 characters>

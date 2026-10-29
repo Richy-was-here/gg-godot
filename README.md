@@ -4,8 +4,6 @@ gg is a Claude Code plugin for building Godot 4 games. It adds seven agent roles
 
 gg descends from [GSD](https://github.com/open-gsd/get-shit-done-redux) and [buildomator](https://github.com/buildomator/buildomator). It keeps their plan → execute → verify cycle and loads about 2 % of their instruction text (48 KB against 2.5 MB).
 
-Status: version 0.1. The verification gates and the planner are tested. The execute and verify commands are being tested on real projects now. Report problems as issues.
-
 ## What it does
 
 - `/gg:new-project` reads any input you give it (chat, user stories, references, an existing codebase) and writes one vision document, then interviews you until the vision has no contradictions. A producer agent checks every later feature request against it.

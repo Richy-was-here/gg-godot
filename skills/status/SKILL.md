@@ -3,7 +3,7 @@ name: status
 description: Show the project state: status.md, open check-outs, phases that may run in parallel.
 allowed-tools: Read, Bash, Agent
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 1. Print `.gamedev/status.md`.
 2. Run `bash ${CLAUDE_PLUGIN_ROOT}/bin/gg-check index .` and print only the `checked out:` lines and the index mismatches.

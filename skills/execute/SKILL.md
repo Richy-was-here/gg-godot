@@ -4,7 +4,7 @@ description: Build the plans of a phase (or one plan) wave by wave: check-out, d
 argument-hint: "<phase id | plan id> [faster]"
 allowed-tools: Read, Bash, Grep, Glob, Agent, AskUserQuestion
 ---
-Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root" to every agent you spawn; agents find templates, rules and bin/ there.
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
 Target: first token of $ARGUMENTS (`M1-P2` = whole phase, `M1-P2-01` = one plan). Mode: `faster` present or called by `/gg:autonomous` → parallel; else sequential. Godot binary: `godot_bin` in `.gamedev/config.md`. Session id: see `/gg:resume`.
 
@@ -17,9 +17,10 @@ Target: first token of $ARGUMENTS (`M1-P2` = whole phase, `M1-P2-01` = one plan)
    d. The developer reports "stopped": a missing file → manager checks it out and the developer continues once; a contract problem or a tool outside Godot → stop the whole run, show the report, ask the human.
    e. `gg:gg-reviewer` with: project root, plan id, plan path, commit range `<start>..HEAD`.
    f. Reviewer `fail`: `gg:gg-developer` once more with the findings as tasks ("fix: <finding>", same files, same commit rule), then the reviewer again. Still `fail`: stop, show findings, ask the human.
-   g. `gg:gg-manager`: "check in <plan id>; add human_checks of the plan to status; next_step = <next plan or '/gg:verify <phase>'>".
-4. After the last wave: run `bash ${CLAUDE_PLUGIN_ROOT}/bin/gg-check load .`. A FAIL is shown as a blocker before anything else.
-5. Report in at most eight lines: plans built, commits, review verdicts, blockers. Last line: `/gg:verify <phase>`.
+   g. `gg:gg-manager`: "check in <plan id>; add human checks <plan id>: <the plan's `human_checks` lines, unchanged>; next_step = <next plan or '/gg:verify <phase>'>".
+4. After the last wave: run `bash ${CLAUDE_PLUGIN_ROOT}/bin/gg-check load .`. A FAIL is shown as a blocker before anything else and given to `gg:gg-manager` as "blocker load <symptom>; <phase>".
+5. Report in at most eight lines: plans built, commits, review verdicts, blockers.
+Last line, always, also after a blocker: `State saved. /clear is safe. Next: `/gg:verify <phase>`, or `/gg:execute <phase>` again after a blocker`.
 
 Rules
 - The main context never reads source files or plan bodies; it routes reports. Reading is the agents' job.
