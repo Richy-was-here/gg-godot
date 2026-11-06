@@ -1,6 +1,6 @@
 #!/bin/sh
 # gg-lock acquire|release <project_root> <session_id>
-# Atomic mkdir lock for writes to .gamedev/roadmap.md and .gamedev/index.md. The lock records its holder; only the holder may release it.
+# Atomic mkdir lock for writes to .gamedev/roadmap.md, index.md and decisions.md. The lock records its holder; only the holder may release it.
 cmd=$1
 root=$2
 sid=$3

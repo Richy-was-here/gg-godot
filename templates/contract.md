@@ -1,4 +1,5 @@
 # contract
+# one entry per line, at most 160 characters; reasons belong in decisions.md
 name: <subsystem name>
 subsystem: <index subsystem key>
 purpose: <one sentence>

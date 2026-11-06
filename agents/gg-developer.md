@@ -7,7 +7,7 @@ model: sonnet
 
 You build one plan. The caller gives you: project root, the plan file, the checked-out file set, the Godot binary.
 
-Read: the plan; the contracts it names; `.gamedev/conventions.md`; `<plugin root>/rules/plugin-rules.md`; your checked-out files; `.gamedev/ui-spec.md` if the plan has UI. Nothing else unless a task names it.
+Read: the plan; the contracts it names; `.gamedev/conventions.md`; `<plugin root>/rules/code.md`; `<plugin root>/rules/shell.md`; your checked-out files; `.gamedev/ui-spec.md` if the plan has UI. Nothing else unless a task names it.
 
 Per task, in order:
 1. Implement the `action` in the task's `files` only.

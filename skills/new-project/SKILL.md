@@ -6,7 +6,9 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, AskUserQuestion, WebF
 ---
 Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
 
-Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. No examples, no prose except `vision.notes`.
+Read `${CLAUDE_PLUGIN_ROOT}/rules/session.md`, `shell.md` and `documents.md` first; the session start hook prints them only once `.gamedev/` exists.
+
+Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. No examples, no prose except `vision.notes`. Documents are English, also when the interview runs in another language.
 
 1. Preconditions
    - `--conventions` given: skip to step 7.
@@ -28,11 +30,11 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
    - Write the draft to `.gamedev/vision.md`.
 
 4. Vision interview
-   - Run the `/gg:discuss project` procedure on the draft. Decisions land in `.gamedev/decisions.md` (D-01 …, scope `project`). Update the vision fields the interview changed. The interview ends with the milestones, their order and `depends_on`.
+   - Create `.gamedev/decisions.md` from the template. Run the `/gg:discuss project` procedure on the draft, except its roadmap writes, which step 5 does. Decisions are recorded by `gg:gg-manager` with scope `P` (P-D-01 …). Update the vision fields the interview changed. The interview ends with the milestones, their order and `depends_on`.
    - Offer once (AskUserQuestion): "Look up similar games?" On yes, spawn `gg:gg-researcher` with the vision's genre, core_loop and references: "List 3 to 5 released games closest to this vision: name, year, platform, one sentence on what it shares with the vision, link." Print the answer in chat. Write nothing; the human adds anything worth keeping with `/gg:note idea`.
 
 5. Roadmap
-   - Write `roadmap.md`: `goal` from the vision; milestones with `done_when` split into agent / human. Phases are added by `/gg:discuss <milestone>`; add them now only if the interview produced them.
+   - Write `roadmap.md`: `goal` from the vision; `discussion: done` (or `paused` if the interview was paused) and the project's remaining `open_questions`; milestones with `done_when` split into agent / human, `discussion: none` and the questions the interview deferred to them as `open_questions`. Phases are added by `/gg:discuss <milestone>`; add them now only if the interview produced them.
    - Existing project: set `status: done` on milestones and phases the old planning documents or the code prove finished. Present this derived state to the human for confirmation before writing it.
 
 6. Index
@@ -44,7 +46,7 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
    - `--conventions`: run only this step, keeping `project_specific`; used after a Godot version change.
 
 8. Config and status
-   - `config.md`: `godot_bin` (`which godot` or ask), `godot_version`, `test_dir: tests/qa`, `shared_files` (project.godot, autoload scripts found in `[autoload]`, input map files).
+   - `config.md`: `godot_bin` (`which godot` or ask), `godot_version`, `test_dir: tests/qa`, `allowed_external` empty, `shared_files` (project.godot, autoload scripts found in `[autoload]`, input map files).
    - `status.md` and `human-checks.md` from the templates, `active` empty.
    - Create `.gamedev/.gdignore` (empty) and `tests/qa/.gdignore` (empty). Add `.gamedev/.lock/` to `.gitignore`.
    - Offer once (AskUserQuestion): add permission rules to `.claude/settings.local.json` so agents run without prompts: `Bash(git *)`, `Bash(<godot_bin> *)`, `Bash(gg-check *)`, `Bash(gg-lock *)`, `Bash(*/bin/gg-check *)`, `Bash(*/bin/gg-lock *)`, `Bash(rm tests/qa/*)`. Without them every agent Bash call asks; `/gg:autonomous` cannot run unattended.

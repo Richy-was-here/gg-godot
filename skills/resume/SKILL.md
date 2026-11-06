@@ -13,3 +13,4 @@ Session id: the `session=` value printed by the gg hook at session start; if non
 4. If the plan's files are still checked out to this session: spawn `gg:gg-developer` with the plan, the open tasks, the checked-out set, the Godot binary from `.gamedev/config.md`. Then continue with the `/gg:execute` procedure from the reviewer step for that plan.
 5. If nothing is checked out: continue with `/gg:next`.
 6. Blockers listed in status.md are shown to the human before anything else.
+Last line, always, also after a blocker: the last line of the procedure you continued with; when there was none, `State saved. /clear is safe. Next: <next_step from status.md>`.

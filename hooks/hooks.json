@@ -1,13 +1,13 @@
 {
-  "description": "gg hooks: reload status.md into context at session start, resume and after compaction; confine the gg-qa subagent to tests/qa and godot runs.",
+  "description": "gg hooks: print status.md and the plugin rules at session start, resume, clear and compaction; enforce the shell rules, the .gamedev/ layout and the gg-qa allowlist; require the state line at the end of gg commands.",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|Bash",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/bin/gg-qa-guard\"",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/bin/gg-guard\"",
             "timeout": 5
           }
         ]
@@ -19,6 +19,17 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/bin/gg-session-start\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/bin/gg-stop\"",
             "timeout": 5
           }
         ]

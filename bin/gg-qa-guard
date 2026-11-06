@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# gg-qa-guard — PreToolUse hook wrapper; the decision lives in gg-qa-guard.js (node ships with Claude Code).
-exec node "$(dirname "$0")/gg-qa-guard.js"

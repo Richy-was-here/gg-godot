@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # gg-check <gate> [project_root] [touched files...]
-# Deterministic checks for /gg:verify. Prints "GATE <name>: PASS|FAIL" plus findings; exit 1 on any FAIL.
+# Deterministic checks for /gg:verify; `docs` checks the .gamedev/ documents (only the given ones when files are passed). Prints "GATE <name>: PASS|FAIL" plus findings; exit 1 on any FAIL.
 set -u
 gate=${1:-all}
 root=${2:-.}
@@ -139,7 +139,102 @@ g_aimarks() {
   say "ai-made entries: $(grep -cv '^#' "$root/.gamedev/ai-made.md" 2>/dev/null || echo 0)"
 }
 
+doc_wanted() { # doc_wanted <path under .gamedev>: true when no files were given or the file is among them
+  [ ${#touched[@]} -eq 0 ] && return 0
+  local t; for t in "${touched[@]}"; do [ "${t#./}" = ".gamedev/$1" ] && return 0; done; return 1
+}
+
+g_docs() {
+  local gd="$root/.gamedev" out f rel
+  [ -d "$gd" ] || { result docs FAIL; say "missing $gd"; return; }
+  out=$(
+    # layout: only the documents of the SPEC layout
+    find "$gd" -type f -not -path "$gd/.lock/*" | sed "s|^$gd/||" | grep -vE '^(vision|roadmap|decisions|index|status|human-checks|conventions|ui-spec|ai-made|notes|config)\.md$|^\.gdignore$|^index/[^/]+\.md$|^plans/[^/]+/[^/]+\.md$|^contracts/[^/]+\.md$' | sed 's|^|layout: not a SPEC document: .gamedev/|'
+    # decisions: format, length, ids, supersede links
+    if [ -f "$gd/decisions.md" ] && doc_wanted decisions.md; then
+      awk -F'|' '
+        function t(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+        /^#/ || /^[ \t]*$/ { next }
+        /^D-[0-9]+[ \t]*\|/ { legacy++; next }
+        { id=t($1)
+          if (NF != 5) { print "decisions:" NR ": " NF " fields, expected 5 (no | inside a decision): " id; next }
+          if (id !~ /^(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9][0-9]+$/) print "decisions:" NR ": id not <scope>-D-NN: " id
+          if (id in line) print "decisions:" NR ": duplicate id " id
+          line[id]=NR; d=t($3); if (length(d) > 200) print "decisions:" NR ": decision longer than 200 characters: " id
+          sup[id]=t($4); by[id]=t($5)
+          if (sup[id] !~ /^(-|(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9]+)$/) print "decisions:" NR ": supersedes is not an id or -: " id
+          if (by[id] !~ /^(-|(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9]+)$/) print "decisions:" NR ": superseded_by is not an id or -: " id }
+        END {
+          for (id in sup) { s=sup[id]; if (s == "-") continue
+            if (!(s in line)) print "decisions: " id " supersedes unknown " s
+            else if (by[s] != id) print "decisions: " s " is superseded by " id " but its superseded_by is " by[s] }
+          for (id in by) { b=by[id]; if (b != "-" && !(b in line)) print "decisions: " id " superseded_by unknown " b }
+          if (legacy) print "decisions: " legacy " lines in the old D-NN format (not checked)" > "/dev/stderr" }
+      ' "$gd/decisions.md"
+    fi
+    # contracts: line length
+    for f in "$gd"/contracts/*.md; do
+      [ -f "$f" ] || continue; rel=contracts/$(basename "$f"); doc_wanted "$rel" || continue
+      awk -v F="$rel" 'length($0) > 160 { print F ":" NR ": line longer than 160 characters" }' "$f"
+    done
+    # plans: human_checks length
+    for f in "$gd"/plans/*/*.md; do
+      [ -f "$f" ] || continue; rel=${f#"$gd"/}; doc_wanted "$rel" || continue
+      awk -v F="$rel" '/^human_checks:/ { h=1; next } /^[^ ]/ { h=0 } h && /^ *- / { s=$0; sub(/^ *- /, "", s); if (length(s) > 80) print F ":" NR ": human check longer than 80 characters" }' "$f"
+    done
+    # status: line length, blocker form
+    if [ -f "$gd/status.md" ] && doc_wanted status.md; then
+      awk '
+        length($0) > 120 { print "status:" NR ": line longer than 120 characters" }
+        /^blockers:/ { b=1; next } /^[^ ]/ { b=0 }
+        b && /^ *- / { s=$0; sub(/^ *- /, "", s); if (s !~ /^</ && s !~ /;/) print "status:" NR ": blocker not in the form <tool or gate> <symptom>; <ids>: " s }
+      ' "$gd/status.md"
+    fi
+    # human checks: format, length, duplicates per phase
+    if [ -f "$gd/human-checks.md" ] && doc_wanted human-checks.md; then
+      awk -F'|' '
+        function t(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+        /^#/ || /^[ \t]*$/ { next }
+        { id=t($1); c=t($2); st=t($3)
+          if (NF != 3) { print "human-checks:" NR ": " NF " fields, expected 3"; next }
+          if (length(c) > 80) print "human-checks:" NR ": criterion longer than 80 characters"
+          if (st != "open" && st != "later") print "human-checks:" NR ": status not open or later: " st
+          ph=id; if (match(id, /^M[0-9]+-P[0-9]+/)) ph=substr(id, 1, RLENGTH)
+          k=ph SUBSEP c; if (k in seen) print "human-checks:" NR ": duplicate of line " seen[k] " in " ph; else seen[k]=NR }
+      ' "$gd/human-checks.md"
+    fi
+    # roadmap: status consistency, open question length
+    if [ -f "$gd/roadmap.md" ] && doc_wanted roadmap.md; then
+      awk '
+        function close_m() { if (m == "") return
+          if (ms == "planned" && busy) print "roadmap: " m " is planned but has active or done phases"
+          if (ms == "done" && open) print "roadmap: " m " is done but has phases not done" }
+        function close_p() { if (p != "" && ps == "active" && sess == "") print "roadmap: " p " is active without a session"; p="" }
+        { ind=match($0, /[^ ]/) - 1 }
+        oq && ind <= oqi { oq=0 }
+        oq && /^ *- / { s=$0; sub(/^ *- /, "", s); if (length(s) > 80) print "roadmap:" NR ": open question longer than 80 characters" }
+        /^ *open_questions:/ { oq=1; oqi=ind; next }
+        /^  - id: / { close_p(); close_m(); m=$3; ms=""; busy=0; open=0; next }
+        /^      - id: / { close_p(); p=$3; ps=""; sess=""; next }
+        ind == 4 && /^ *status:/ { ms=$2 }
+        ind == 8 && /^ *status:/ { ps=$2; if (ps == "active" || ps == "done") busy=1; if (ps != "done") open=1 }
+        ind == 8 && /^ *session:/ { sess=$2 }
+        END { close_p(); close_m() }
+      ' "$gd/roadmap.md"
+    fi
+    # language: documents are English (quoted in-game text excepted)
+    for f in vision.md roadmap.md decisions.md status.md; do
+      [ -f "$gd/$f" ] && doc_wanted "$f" || continue
+      grep -nv -e '^#' -e '^name:' "$gd/$f" | sed 's/"[^"]*"//g' \
+        | grep -iE '(ä|ö|ü|Ä|Ö|Ü|ß)|(^|[^[:alpha:]])(und|nicht|wird|werden|oder|eine|einen|sind|auch|wenn|dass|kein|keine)([^[:alpha:]]|$)' \
+        | cut -d: -f1 | sed "s|^|$f:|; s|$|: not English|"
+    done
+  )
+  if [ -n "$out" ]; then printf '%s\n' "$out"; result docs FAIL; else result docs PASS; fi
+}
+
 case "$gate" in
+  docs) g_docs ;;
   load) g_load ;;
   parse) g_parse ;;
   stubs) g_stubs ;;
@@ -147,7 +242,7 @@ case "$gate" in
   artifacts) g_artifacts ;;
   index) g_index ;;
   aimarks) g_aimarks ;;
-  all) g_load; g_parse; g_stubs; g_leftovers; g_artifacts; g_index ;;
-  *) say "usage: gg-check load|parse|stubs|leftovers|artifacts|index|aimarks|all [project_root] [touched files...]"; exit 2 ;;
+  all) g_load; g_parse; g_stubs; g_leftovers; g_artifacts; g_index; touched=(); g_docs ;;
+  *) say "usage: gg-check load|parse|stubs|leftovers|artifacts|index|aimarks|docs|all [project_root] [touched files...]"; exit 2 ;;
 esac
 exit $fail

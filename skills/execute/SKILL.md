@@ -14,7 +14,7 @@ Target: first token of $ARGUMENTS (`M1-P2` = whole phase, `M1-P2-01` = one plan)
    a. `gg:gg-manager`: "check out <plan file> for session <sid>". A refusal (file held, shared file conflict) moves the plan to the next group; a second refusal is a blocker.
    b. Record `git rev-parse HEAD` as the plan's start commit.
    c. `gg:gg-developer` with: project root, plan path, checked-out file set, Godot binary, plugin root.
-   d. The developer reports "stopped": a missing file → manager checks it out and the developer continues once; a contract problem or a tool outside Godot → stop the whole run, show the report, ask the human.
+   d. The developer reports "stopped": a missing file → manager checks it out and the developer continues once; a contract problem, a tool outside Godot or a command blocked by gg-guard → stop the whole run, show the report, ask the human.
    e. `gg:gg-reviewer` with: project root, plan id, plan path, commit range `<start>..HEAD`.
    f. Reviewer `fail`: `gg:gg-developer` once more with the findings as tasks ("fix: <finding>", same files, same commit rule), then the reviewer again. Still `fail`: stop, show findings, ask the human.
    g. `gg:gg-manager`: "check in <plan id>; add human checks <plan id>: <the plan's `human_checks` lines, unchanged>; next_step = <next plan or '/gg:verify <phase>'>".

@@ -12,13 +12,15 @@ Single source of truth for the plugin. Commands, roles, templates and hooks are 
 - Scripts carry at most two header comment lines (purpose, responsibility), placed where conventions.md puts the doc comment. Explanations belong in documents.
 - Agents write files with the Write and Edit tools, never with shell redirection (heredocs break on Windows).
 - Official Godot guidelines for the project's Godot version plus software-engineering practice for scalability and correctability.
-- No tooling outside Godot in the game project except justified exceptions. One-off tests and tools live under `tests/qa/` and are deleted after use; a tool that stays useful is kept, indexed and recorded in decisions.md.
+- No interpreter or runtime outside Godot in any shell call, inline or from a file. The only exceptions are programs the human lists under `allowed_external` in config.md together with a decision. One-off tests and tools live under `tests/qa/` and are deleted after use; a tool that stays useful is kept, indexed and recorded in decisions.md.
+- A rule that agents broke in use is enforced by a hook or by gg-check, not only written down.
+- A project decision does not override a plugin rule. Only the exceptions a rule names exist.
 - A command that fails twice with the same output is not run a third time; the agent stops and reports.
 - Logging uses `push_error` / `push_warning`; `print` is debug output and fails verify.
 - Text written by or for the plugin uses plain declarative sentences: no metaphors, no lists of three for effect, no "not X but Y" constructions, no bold lead-ins; a claim carries a number or an example or is left out.
 - Subsystems are developed as isolated as possible.
 - Creative in-game text (dialogue, notes, lore) is placeholder only, marked `[AI]` inside the text. Factual text (UI labels, tooltips, system messages) is plain, unmarked. AI-made graphics and sounds are tracked in `ai-made.md`.
-- Code, comments and documents are English. In-game text is in the game's language.
+- Code, comments and documents are English, also when the conversation runs in another language. In-game text is in the game's language.
 
 ## 2. Project layout
 
@@ -37,45 +39,45 @@ Single source of truth for the plugin. Commands, roles, templates and hooks are 
     notes.md           created at the first note (marketing / idea); read on request only
     plans/<phase>/<plan>.md
     contracts/<subsystem>.md
-    config.md          godot_bin, test_dir, shared_files
-    .lock/             mkdir-based lock for roadmap.md and index.md writes
+    config.md          godot_bin, test_dir, allowed_external, shared_files
+    .lock/             mkdir-based lock for roadmap.md, index.md and decisions.md writes
   tests/qa/            QA throwaway tests; empty after verify
 ```
 
-`.gamedev/` is listed in `.gdignore`-style exclusion by containing an empty `.gdignore` file so the Godot editor does not scan it.
+`.gamedev/` is listed in `.gdignore`-style exclusion by containing an empty `.gdignore` file so the Godot editor does not scan it. No other file may exist in `.gamedev/`; gg-guard refuses writes outside this layout and gate 10 reports them.
 
 ## 3. Documents
 
 Field lists in `templates/`. Rules:
 
 - vision — fields: name, pitch, genre, perspective, platform, core_loop, feel, pillars, scope_out, constraints, references, notes. Produced from any input (chat, interviews, grill-me, user stories, art, videos as references, comparable games as the aspect meant). Covers all input, contains no contradictions (resolved by asking), is unambiguous and non-redundant. `notes` is the only prose field and is used only for the unusual.
-- roadmap — goal; milestones with id, name, depends_on, status, done_when (agent / human); phases with id, name, goal, depends_on, status, session, done_when (agent / human). Status lives here, nowhere else. Milestones are numbered for direction; `depends_on` decides what may run in parallel.
-- decisions — D-NN, date, scope (project | milestone | phase id), decision, supersedes. Never deleted; superseded entries are marked.
+- roadmap — goal, discussion, open_questions; milestones with id, name, depends_on, status, discussion, open_questions, done_when (agent / human); phases with id, name, goal, depends_on, status, session, discussion, open_questions, done_when (agent / human). Status lives here, nowhere else. Milestones are numbered for direction; `depends_on` decides what may run in parallel. `discussion` (none | paused | done) tells `next` and `discuss` whether a target was discussed; `open_questions` holds questions deferred to that target, at most 80 characters each.
+- decisions — id, date, decision, supersedes, superseded_by. The id carries the scope: `P-D-NN` (project), `M<n>-D-NN` (milestone), `M<n>-P<n>-D-NN` (phase), numbered per scope. A decision fixes a contract, a value or threshold, a behavior, a scope or an order; measurements, incidents and process notes are not decisions. At most 200 characters. Written only by gg-manager under the lock. Never deleted; a superseded entry gets `superseded_by`.
 - index — one line per file: path, kind (script | scene | resource | doc | other), subsystem, checked_out_by, checked_out_at. No descriptions.
 - status — active phases (one block per session): phase, plan, task, last_done (one id and one status word), next_step (one `/gg:` command); open human checks as a count per phase; blockers (tool or gate, symptom, ids, decision id). Overwritten at every check-in. Text that does not fit a field is refused by gg-manager.
 - human-checks — phase or plan id, criterion (copied unchanged from the plan or the roadmap, at most 80 characters), status (open | later). Read by review, complete-milestone and autonomous only.
 - plan — phase, plan, wave, depends_on, files, decisions, contracts, objective, tasks (name, files, action, verify, done), human_checks. `action` contains no code blocks. `verify` is a command or check an agent can run; otherwise it belongs in `human_checks`.
-- contract — name, subsystem, purpose, interface (one line per public function and signal), guarantees, error_behavior, dependencies, not_included.
-- conventions — one rule per line, derived from the official Godot documentation matching the version in `project.godot`, plus `pitfalls` (at most 20 known traps of that version from docs and GitHub issues); refreshed with `new-project --conventions` after a version change, which `status` detects. Plugin-wide rules in `rules/plugin-rules.md` are not copied here.
+- contract — name, subsystem, purpose, interface (one line per public function and signal), guarantees, error_behavior, dependencies, not_included. Lines at most 160 characters, no reasons.
+- conventions — one rule per line, derived from the official Godot documentation matching the version in `project.godot`, plus `pitfalls` (at most 20 known traps of that version from docs and GitHub issues); refreshed with `new-project --conventions` after a version change, which `status` detects. Plugin-wide rules in `rules/` are not copied here.
 - ui-spec — style, palette, typography, layout rules, components, motion, sound cues. Changeable at any time.
 - ai-made — path, kind (sprite | sound | music | other), created, replaced_by.
 - notes — date, kind (marketing | idea), line.
-- config — godot_bin, godot_version, test_dir, allowed_warnings, shared_files.
+- config — godot_bin, godot_version, test_dir, allowed_warnings, allowed_external, shared_files.
 
 ## 4. Roles
 
 | Agent | Model | Reads | Writes | Tools |
 |---|---|---|---|---|
-| gg-manager | sonnet | index, roadmap, status, config | index, roadmap, status, notes, lock | Read, Write, Edit, Bash, Glob, Grep, Task |
+| gg-manager | sonnet | document and shell rules, index, roadmap, status, human-checks, config; decision ids | index, roadmap, status, human-checks, decisions, notes, lock | Read, Write, Edit, Bash, Glob, Grep, Task |
 | gg-producer | opus | vision, roadmap, decisions | nothing | Read, Grep, Glob |
-| gg-planner | opus | vision, roadmap, decisions, index, contracts, conventions; files as needed | plans, contracts, decisions | Read, Write, Edit, Glob, Grep, Task |
+| gg-planner | opus | vision, roadmap, decisions of its scopes, index, contracts, conventions, code and document rules; files as needed | plans, contracts | Read, Write, Edit, Glob, Grep, Task |
 | gg-researcher | sonnet | web, Godot docs | nothing | WebSearch, WebFetch, Read |
 | gg-developer | sonnet | its plan, its contracts, its checked-out files, conventions | its checked-out files only | Read, Write, Edit, Bash, Glob, Grep, Task |
 | gg-reviewer | opus | the diff, contracts, conventions | nothing | Read, Bash, Grep, Glob |
-| gg-qa | sonnet | one contract | tests/qa/ only | Write, Bash (allowlist in the plugin PreToolUse hook `bin/gg-qa-guard`: writes under tests/qa/, Bash only Godot runs and ls/cat/rm/mkdir on tests/qa/ paths; acts only when `agent_type` is gg-qa) |
+| gg-qa | sonnet | one contract | tests/qa/ only | Write, Bash (allowlist in the plugin PreToolUse hook `bin/gg-guard`: writes under tests/qa/, Bash only Godot runs and ls/cat/rm/mkdir on tests/qa/ paths; acts only when `agent_type` is gg-qa) |
 
 Rules:
-- Only gg-manager writes roadmap, index and status. Only gg-planner writes contracts and plans. Only the human (via gg-manager) changes the vision.
+- Only gg-manager writes roadmap, index, status, human-checks and decisions; it assigns decision ids. Only gg-planner writes contracts and plans. Only the human changes the vision, through `discuss project` or `new-project`.
 - gg-developer commits with explicit paths from its plan, never the whole tree. Commit message starts with the plan id.
 - gg-qa has no access to code or documents. Its test scene or script lives in `tests/qa/`, runs headless, and is deleted after verify. Every QA run hunts for exploits: boundary values, rapid repeats, wrong call order, empty inputs, state combinations. At milestone end QA runs the whole system against all contracts and compares observed behavior with the vision text it is handed; the reviewer then reads the whole codebase against conventions and contracts. Persona is rotated by `verify` per contract (skeptical player, speedrunner, completionist, confused newcomer); the report format is fixed: steps, expected, actual.
 - gg-researcher returns its answer to the caller with sources. It writes no document. Findings that are decisions go to decisions.md via the caller; rules for all projects go to the plugin.
@@ -86,11 +88,11 @@ Rules:
 | Command | Does | Stops for human |
 |---|---|---|
 | new-project | Onboarding: vision from input, roadmap, decisions, index, status, conventions, config; existing code is indexed; old planning docs read once; offers a list of similar games after the interview (chat only) | contradictions in input; confirmation of the derived state; similar-games offer |
-| discuss `<project|milestone|phase>` | grill-me on the target; writes decisions; scope by target: project = vision and milestone cut, milestone = the system as a whole, phase = one area in detail; deeper questions are deferred | every question |
+| discuss `<milestone|phase|project>` | grill-me on the target; scope by target: project = vision and milestone cut, milestone = the system as a whole, phase = one area in detail; a question is asked only if it belongs to the level, its answer is not derivable, and its facts are checked; deeper questions go to that target's `open_questions`; an already discussed target is not discussed again, only one of its decisions can be changed on request; decisions recorded by gg-manager | every question |
 | plan `<phase>` | gg-planner: plans, contracts, waves, decision coverage | never |
 | execute `<phase|plan>` | gg-manager checks out; gg-developer builds; gg-reviewer reads the diff; check-in | reviewer failure after one retry |
-| verify `<phase>` | gg-qa per contract, then the nine gates; collects human checks; failures become a fix plan | never (reports) |
-| next | next logical step; stops after plan; refuses to complete a milestone with open human checks | after plan; open human checks at milestone end |
+| verify `<phase>` | gg-qa per contract, then the ten gates; collects human checks; failures become a fix plan | never (reports) |
+| next | next logical step from roadmap `discussion` and `status`: discuss what is not discussed, then plan, execute, verify; stops after plan; refuses to complete a milestone with open human checks | after plan; open human checks at milestone end |
 | autonomous `<goal>` | runs discuss-less plan → execute → verify to the goal; collects human checks; waves run in parallel | decision needed; blocker after one retry |
 | review | human verdict on collected human checks; failures become tasks | every item |
 | complete-milestone | gg-qa in milestone mode (all contracts, main scene, vision; persona breaker), gg-reviewer in milestone mode (whole codebase against conventions and contracts), gg-producer vision check; `[AI]` and ai-made listing; git tag; marketing question | open human checks; drift; marketing question |
@@ -115,14 +117,18 @@ Check-out / check-in
 - Shared files (`config.shared_files`, default: project.godot, autoloads, input map) are touched only by gg-manager or strictly sequentially.
 
 Locking
-- Every write to roadmap.md and index.md is wrapped in `gg-lock acquire <root> <session id>` / `gg-lock release <root> <session id>` (atomic mkdir; the lock records its holder; release by another session is refused; a lock older than 10 minutes is broken). Wait up to 30 s, then report.
+- Every write to roadmap.md, index.md and decisions.md is wrapped in `gg-lock acquire <root> <session id>` / `gg-lock release <root> <session id>` (atomic mkdir; the lock records its holder; release by another session is refused; a lock older than 10 minutes is broken). Wait up to 30 s, then report.
 
 Two sessions
 - Shared working directory. A session claims a phase by setting `status: active` and `session` in roadmap.md under the lock; the first claim inside a milestone sets the milestone `active`. Two sessions never share a phase. Index check-outs carry the session id.
 
 Handoff
-- status.md is always current at claim and check-in. A SessionStart hook (startup, resume, compact) prints status.md and the session id into context. `/gg:resume` continues from it.
-- Every command that changes state ends with the line `State saved. /clear is safe. Next: <command>`, also after a blocker; the phase then stays `active` and `Next` names the command to run again.
+- status.md is always current at claim and check-in. A SessionStart hook (startup, resume, clear, compact) prints status.md, the session id and `rules/session.md`, `shell.md` and `documents.md` into context. `/gg:resume` continues from it.
+- Every command except help, status and research ends with the line `State saved. /clear is safe. Next: <command>` in English, unchanged, also after a pause or a blocker; the phase then stays `active` and `Next` names the command to run again. A Stop hook (`bin/gg-stop`) checks the last line after a `/gg:` command and sends the turn back once when it is missing.
+
+Guards
+- `bin/gg-guard` runs before every Write, Edit and Bash call in a project with `.gamedev/`. Bash: it refuses interpreters and runtimes outside Godot (python, py, node, npm, perl, ruby, powershell and scripts with their extensions) unless listed in `allowed_external`, redirection into files, heredocs, `tee` and `sed -i`. Write and Edit: it refuses files in `.gamedev/` outside the layout. For the gg-qa subagent it applies the QA allowlist instead.
+- Both hooks fail open on input they cannot parse.
 
 Commits
 - One commit per task, paths explicit, message `<phase>-<plan>: <task name>`. gg-manager commits `.gamedev/` changes as `<id>: state` after claim, after planning and at check-in; nothing else touches `.gamedev/` in git.
@@ -138,6 +144,7 @@ Verify gates (all hard)
 7. One-off tests and tools are deleted; `tests/qa/` is empty; any other file under `tests/` is listed in the index
 8. Roadmap `done_when` (agent side) all met; human side listed to the human
 9. No artifacts: unreferenced files, debug prints, commented-out code, temp files, unused signals and exports in touched files
+10. Documents (`gg-check docs`): only layout files in `.gamedev/`; decision ids, fields, 200-character limit and supersede links; contract lines at most 160 characters; status lines at most 120 and blockers in template form; human checks and open questions at most 80 characters, no duplicates per phase; roadmap status consistent (a milestone with active or done phases is not `planned`, a `done` milestone has only done phases, an active phase has a session); vision, roadmap, decisions and status in English. Findings go to the document's writer (gg-manager or gg-planner), not into a fix plan
 
 Autonomous
 - Input: a goal (milestone or phase id). Runs plan → execute → verify per phase. Human checks are collected, not awaited.
@@ -177,6 +184,14 @@ Change management
 | 22 | `review` command; milestone cannot complete with open human checks | Human plays when they want; no unassignable pile |
 | 23 | Two sessions: shared directory, phase claim in roadmap, lock on roadmap/index writes | No scene merges |
 | 24 | Build in three stages against a throwaway project: core, operations, existing projects | Learn where breaking is free |
+| 25 | Decision ids `P-D-NN`, `M<n>-D-NN`, `M<n>-P<n>-D-NN`, numbered per scope; gg-manager assigns them under the lock and is the only writer of decisions.md; `superseded_by` field | Parallel sessions assigned the same D-NN; the id shows where a decision belongs |
+| 26 | discuss asks only questions of the target's level, with a non-derivable answer, after checking the facts; derived answers are confirmed at the checkpoint | Interviews left the scope, asked the obvious and recommended on unchecked facts |
+| 27 | Roadmap fields `discussion` and `open_questions` per target; next and discuss route by them | Finished discussions were offered again; deferred questions had no place |
+| 28 | Shell rules enforced by gg-guard; exceptions only through `allowed_external` | Agents ran Python despite the written rule |
+| 29 | `.gamedev/` layout enforced by gg-guard; documents checked by gate 10 (extends 11 to ten gates) | Documents drifted from the templates without a check |
+| 30 | Stop hook requires the state line after gg commands | The line was left out or translated |
+| 31 | Rules split by reader: `rules/code.md` (developer, reviewer, planner), `shell.md` (developer, manager), `documents.md` (manager, planner), `session.md` (main session); session, shell and document rules printed at session start; each rule stated in one file only; project decisions do not override them | Writers of documents did not know the rules; each agent read rules it did not need; a project decision lifted a plugin rule |
+| 32 | gg-manager runs `gg-check docs` once at the end of a request, on all files it wrote | One check per write cost a tool call each |
 
 Settled during build: commit message prefix = plan id (for undo); QA runs in `verify`, not in `execute`, so one independent run per cycle instead of two; QA persona rotated by `verify`; handoff = status printed by a SessionStart hook (startup/resume/compact) instead of a PreCompact writer, because status is already current at every check-in; deterministic gates live in `bin/gg-check` (one call instead of a dozen greps per verify); plugin helpers live in `bin/`, which Claude Code puts on PATH, and agents receive the plugin root from the calling skill because `${CLAUDE_PLUGIN_ROOT}` is substituted only in skills.
 

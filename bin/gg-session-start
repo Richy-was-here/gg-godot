@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gg-session-start — SessionStart hook: if the cwd is a gg project, print session id and status.md into context.
+# gg-session-start — SessionStart hook: if the cwd is a gg project, print session id, status.md and the session, shell and document rules into context.
 input=$(cat)
 sid=$(printf '%s' "$input" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
 cwd=$(printf '%s' "$input" | sed -n 's/.*"cwd"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
@@ -7,4 +7,6 @@ cwd=${cwd:-$PWD}
 [ -f "$cwd/.gamedev/status.md" ] || exit 0
 echo "gg project detected. session=${sid:-$(date +%Y%m%d-%H%M%S)}"
 cat "$cwd/.gamedev/status.md"
+rules="$(dirname "$0")/../rules"
+cat "$rules/session.md" "$rules/shell.md" "$rules/documents.md"
 echo "Resume with /gg:resume, advance with /gg:next."

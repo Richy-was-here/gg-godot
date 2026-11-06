@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# gg-stop — Stop hook wrapper; the decision lives in gg-stop.js (node ships with Claude Code).
+exec node "$(dirname "$0")/gg-stop.js"

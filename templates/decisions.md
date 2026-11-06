@@ -1,2 +1,2 @@
 # decisions
-# id | date | scope (project|<milestone id>|<phase id>) | decision | supersedes (D-NN or -)
+# id (<scope>-D-NN; scope P | M<n> | M<n>-P<n>) | date | decision (English, at most 200 characters) | supersedes (id or -) | superseded_by (id or -)

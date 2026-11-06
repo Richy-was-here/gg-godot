@@ -9,12 +9,13 @@ gg — Godot workflow. Docs live in .gamedev/. Spec: ${CLAUDE_PLUGIN_ROOT}/SPEC.
 
 Start
   /gg:new-project [input]        onboard; vision from your input, roadmap, index, conventions
-  /gg:discuss project|M1|M1-P1   grill-me on the target; decisions -> decisions.md
+  /gg:discuss M1|M1-P1           grill-me on the target; decisions M1-D-01, M1-P1-D-01
+                                 already discussed: offers to change one decision
 Loop
   /gg:next                       next step; stops after planning for your review
   /gg:plan M1-P1                 plans, contracts, waves for a phase
   /gg:execute M1-P1 [faster]     build plans: developer + reviewer; "faster" = parallel waves
-  /gg:verify M1-P1               QA per contract + nine gates; human checks collected
+  /gg:verify M1-P1               QA per contract + ten gates; human checks collected
   /gg:review                     your verdict on collected human checks
   /gg:complete-milestone M1      producer check, [AI] list, git tag
   /gg:autonomous M1|M1-P3        run to the goal; stops only for decisions or blockers

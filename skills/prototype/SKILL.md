@@ -12,7 +12,7 @@ Idea: $ARGUMENTS. Branch: `proto/<slug>` from the current commit.
 2. Spawn `gg:gg-developer` with: "prototype under `prototypes/<slug>/` only; one scene runnable from the editor; ignore conventions except header lines; no contract; commit as `PROTO-<slug>: <what>`". No check-out: the branch isolates it.
 3. Tell the human how to run it (scene path, `godot --path . res://prototypes/<slug>/<scene>.tscn`). Wait.
 4. Ask: keep direction | drop | iterate (then one more developer round, back to 3).
-5. Record: append `D-NN | date | project | prototype <slug>: <verdict in one line> | -` to `.gamedev/decisions.md` on `main`.
-6. `git switch main` and `git branch -D proto/<slug>`. Nothing from the prototype is merged; what is kept is the decision, and the planner builds it properly in a phase.
+5. `git switch main` and `git branch -D proto/<slug>`. Nothing from the prototype is merged; what is kept is the decision, and the planner builds it properly in a phase.
+6. Record on `main`: `gg:gg-manager` "record decisions <scope>: prototype <slug>: <verdict in one line, English>; commit state", scope = the phase or milestone the idea belongs to, else `P`.
 7. Report: verdict, decision id.
 Last line, always, also after a blocker: `State saved. /clear is safe. Next: `/gg:feature <idea>` or `/gg:discuss <phase>``.

@@ -9,7 +9,7 @@ You review the commits of one plan. The caller gives you: project root, plan id,
 
 Milestone mode: the caller gives you project root and milestone id, no commit range. Read every script and scene listed in the index for the milestone's subsystems against `conventions.md` (all sections, `pitfalls` included) and the contracts. Report drift between subsystems (same thing done two ways), convention breaks and contract violations, in the same fixed form.
 
-Read: `git diff <range>` and `git log --oneline <range>`; the plan; the contracts it names; `.gamedev/conventions.md`; `<plugin root>/rules/plugin-rules.md`. Open a full file only when the diff does not show enough context.
+Read: `git diff <range>` and `git log --oneline <range>`; the plan; the contracts it names; `.gamedev/conventions.md`; `<plugin root>/rules/code.md`. Open a full file only when the diff does not show enough context.
 
 Check, in this order:
 1. Contract: every interface line is implemented as written; guarantees hold; error_behavior matches; nothing from not_included was built.

@@ -9,7 +9,7 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with th
 Goal: $ARGUMENTS. Session id: see `/gg:resume`. Mode flags for the procedures you call: `plan --auto`, `execute faster`, verify in autonomous mode.
 
 Loop until the goal's `status` is `done` or a stop condition holds:
-1. Pick the next phase as in `/gg:next` step 6, restricted to phases inside the goal (the phase itself, or phases of the milestone). A phase with no `done_when` is a stop condition (decision needed: run `/gg:discuss <phase>`).
+1. Pick the next phase as in `/gg:next` step 6, restricted to phases inside the goal (the phase itself, or phases of the milestone). A phase with no `done_when` or with `discussion: paused`, and a milestone whose `discussion` is not `done`, are stop conditions (decision needed: run `/gg:discuss <id>`).
 2. `/gg:plan <phase> --auto` → `/gg:execute <phase> faster` → `/gg:verify <phase>`.
 3. Verify FAIL: execute the fix plan once, verify again. Second FAIL: stop condition (blocker).
 4. Phase done: continue. Milestone done: do not run `/gg:complete-milestone`; that needs the human.

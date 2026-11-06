@@ -6,7 +6,7 @@ depends_on: [<plan ids>]
 files:
   new: [<paths>]
   modified: [<paths>]
-decisions: [<D-NN>]
+decisions: [<decision ids>]
 contracts: [<subsystem names created or changed>]
 objective: <one sentence>
 tasks:

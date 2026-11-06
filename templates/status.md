@@ -9,4 +9,4 @@ active:
 open_human_checks:
   - <phase id> <count of open lines in human-checks.md>
 blockers:
-  - <tool or gate> <symptom, at most six words>; <ids affected>; <D-NN when a phase was closed despite it>
+  - <tool or gate> <symptom, at most six words>; <ids affected>; <decision id when a phase was closed despite it>

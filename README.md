@@ -1,6 +1,6 @@
 # Good Games Godot Workflow (gg-godot)
 
-gg is a Claude Code plugin for building Godot 4 games. It adds seven agent roles (manager, producer, planner, researcher, developer, reviewer, QA), a roadmap of milestones and phases, file check-out between agents, nine verification gates and an unattended mode. The human decides what is built and judges look, sound and feel; the agents plan, build, review and test.
+gg is a Claude Code plugin for building Godot 4 games. It adds seven agent roles (manager, producer, planner, researcher, developer, reviewer, QA), a roadmap of milestones and phases, file check-out between agents, ten verification gates and an unattended mode. The human decides what is built and judges look, sound and feel; the agents plan, build, review and test.
 
 gg descends from [GSD](https://github.com/open-gsd/get-shit-done-redux) and [buildomator](https://github.com/buildomator/buildomator). It keeps their plan → execute → verify cycle and loads about 2 % of their instruction text (48 KB against 2.5 MB).
 
@@ -9,7 +9,9 @@ gg descends from [GSD](https://github.com/open-gsd/get-shit-done-redux) and [bui
 - `/gg:new-project` reads any input you give it (chat, user stories, references, an existing codebase) and writes one vision document, then interviews you until the vision has no contradictions. A producer agent checks every later feature request against it.
 - The roadmap holds milestones and phases. Each phase has `done_when` criteria, split into what an agent can check and what only you can judge.
 - The planner writes a contract per subsystem. A QA agent tests the subsystem against that contract with a throwaway headless script. The QA agent has no access to the code or the documents.
-- `/gg:verify` runs nine gates: the project loads headless, all scripts parse, no stubs, QA passed, every decision is traceable in the diff, the file index is consistent, no leftover test files, phase criteria met, no dead code or debug prints. A warning fails the gate.
+- `/gg:verify` runs ten gates: the project loads headless, all scripts parse, no stubs, QA passed, every decision is traceable in the diff, the file index is consistent, no leftover test files, phase criteria met, no dead code or debug prints, the documents follow their templates and limits. A warning fails the gate.
+- Decisions carry their scope in the id: `P-D-01` for the project, `M2-D-01` for milestone 2, `M2-P3-D-01` for its third phase.
+- Plugin hooks enforce the main rules: no Python, Node or other interpreters in agent shell calls, files are written only with the Write and Edit tools, `.gamedev/` holds only the documents of the layout, and every gg command ends with the line that names the next command.
 - Files are checked out to a plan before an agent writes them. Plans with disjoint file sets run in parallel; shared files such as `project.godot` and autoloads never do. Two Claude Code sessions can work on one project.
 - `/gg:autonomous` runs phases unattended to a goal you set. It collects everything that needs your judgement and stops only for a decision or a blocker. `/gg:review` takes your verdicts afterwards.
 - Creative in-game text is written as a placeholder marked `[AI]`. AI-made graphics and sounds are listed in one file so you can replace them later.
@@ -22,7 +24,7 @@ gg descends from [GSD](https://github.com/open-gsd/get-shit-done-redux) and [bui
 | Commands | 19 | 86 | 8 |
 | Instruction text | 48 KB | 2.5 MB | 124 KB |
 | Project state | 5 plain files in `.gamedev/` | MCP server, memdir, markdown | one design document |
-| Verification | 9 gates, blind QA per contract | conversational acceptance test, drift scan | run the game |
+| Verification | 10 gates, blind QA per contract | conversational acceptance test, drift scan | run the game |
 | Unattended runs | yes, to a goal; stops for decisions | yes | no |
 
 Sizes are the bytes of each plugin's skills, agents, workflows, templates and references on 2026-10-27. cc-godot's size is mostly scene and UI templates and reference text; gg-godot fetches conventions and known pitfalls for the project's Godot version at onboarding instead of embedding them.
