@@ -62,7 +62,7 @@ Agents run `git`, the Godot binary and the plugin helpers `gg-check` and `gg-loc
 
 ## Contributing
 
-Read `SPEC.md` before proposing a change. It lists every design decision and the reason for it.
+Read `SPEC.md` before proposing a change. It lists every design decision and the reason for it. Changes per version are listed in `CHANGELOG.md`.
 
 ## Support
 
