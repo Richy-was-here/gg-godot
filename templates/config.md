@@ -2,6 +2,8 @@
 godot_bin: <path or "godot">
 godot_version: <x.y>
 test_dir: tests/qa
+folders:
+  - <folder pattern for game files; * stands for one folder name; files may lie at any depth below>
 allowed_warnings:
   - <substring of an accepted Godot warning line; empty by default>
 allowed_external:

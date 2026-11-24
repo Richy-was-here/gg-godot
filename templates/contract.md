@@ -6,6 +6,8 @@ purpose: <one sentence>
 interface:
   - <func_name(args) -> return>
   - <signal signal_name(args)>
+prepared:
+  - <name>: <what will connect here later; the code carries "# API: <subsystem>.<name>" at the spot>
 guarantees:
   - <invariant that always holds>
 error_behavior:

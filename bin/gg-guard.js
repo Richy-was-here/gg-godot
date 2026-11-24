@@ -1,5 +1,5 @@
 // gg-guard.js — PreToolUse hook for gg projects. Reads the hook JSON on stdin; exit 2 blocks the call.
-// Enforces the gg-qa allowlist, rules/shell.md for every agent and the .gamedev/ layout of rules/documents.md.
+// Enforces the gg-qa allowlist, rules/shell.md, the .gamedev/ layout and the config.md folders for new files.
 const fs = require("fs");
 const path = require("path");
 
@@ -166,6 +166,39 @@ function gamedevRel(file, cwd, root) {
   return a.startsWith(b) ? f.slice(prefix.length) : null;
 }
 
+function projectRel(file, cwd, root) {
+  let f = slash(file);
+  if (!isAbs(f)) f = slash(cwd).replace(/\/+$/, "") + "/" + f;
+  f = normPath(f);
+  const prefix = normPath(slash(root)) + "/";
+  const ci = /^[A-Za-z]:\//.test(f) || process.platform === "win32";
+  return (ci ? f.toLowerCase() : f).startsWith(ci ? prefix.toLowerCase() : prefix) ? f.slice(prefix.length) : null;
+}
+
+function folderPatterns(root) {
+  let txt = "";
+  try { txt = fs.readFileSync(path.join(root, ".gamedev", "config.md"), "utf8"); } catch { return []; }
+  const out = [];
+  let inList = false;
+  for (const line of txt.split(/\r?\n/)) {
+    if (/^folders:/.test(line)) { inList = true; continue; }
+    if (inList && /^\S/.test(line)) break;
+    const m = inList && /^\s+-\s+([^\s<]\S*)/.exec(line);
+    if (m) out.push(new RegExp("^" + m[1].replace(/\/+$/, "").replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]+") + "/"));
+  }
+  return out;
+}
+
+const ALWAYS = /^(\.gamedev|tests\/qa|addons|\.godot|\.git|\.github|\.claude)\//;
+const ROOT_OK = /^(icon\.svg|default_bus_layout\.tres|default_env\.tres)$/;
+const ROOT_GAME = /\.(gd|tscn|scn|tres|res|gdshader|png|jpe?g|webp|svg|wav|ogg|mp3|glb|gltf|blend|fbx|obj|ttf|otf)$/i;
+
+function inFolders(rel, pats) {
+  if (ALWAYS.test(rel)) return true;
+  if (!rel.includes("/")) return ROOT_OK.test(rel) || !ROOT_GAME.test(rel);
+  return pats.some((re) => re.test(rel));
+}
+
 function qaGuard(tool, input) {
   const norm = (p) => slash(p).replace(/^[A-Za-z]:/, "");
   const inQa = (p) => { const x = norm(p).replace(/^res:\/\//, "/"); return /(^|\/)tests\/qa\//.test(x) && !/(^|\/)\.\.(\/|$)/.test(x); };
@@ -211,9 +244,19 @@ process.stdin.on("end", () => {
     process.exit(0);
   }
   if (/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(tool)) {
-    const rel = gamedevRel(input.file_path || input.notebook_path || "", cwd, root);
+    const file = input.file_path || input.notebook_path || "";
+    const rel = gamedevRel(file, cwd, root);
     if (rel !== null && !LAYOUT.some((re) => re.test(rel))) {
       block(".gamedev/ holds only the documents of the SPEC layout; " + rel + " is not one of them. Put the content into the document that owns it, or leave it out.");
+    }
+    const prel = projectRel(file, cwd, root);
+    let exists = true;
+    try { exists = fs.existsSync(isAbs(slash(file)) ? file : path.join(cwd, file)); } catch { /* treat as existing */ }
+    if (tool === "Write" && prel !== null && !exists) {
+      const pats = folderPatterns(root);
+      if (pats.length && !inFolders(prel, pats)) {
+        block("new file " + prel + " lies outside the folders in .gamedev/config.md. Use a path inside one of them, or stop and report the missing folder to the human.");
+      }
     }
   }
   process.exit(0);

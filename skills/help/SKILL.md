@@ -8,16 +8,17 @@ Print exactly this, nothing more:
 gg — Godot workflow. Docs live in .gamedev/. Spec: ${CLAUDE_PLUGIN_ROOT}/SPEC.md
 
 Start
-  /gg:new-project [input]        onboard; vision from your input, roadmap, index, conventions
-  /gg:discuss M1|M1-P1           grill-me on the target; decisions M1-D-01, M1-P1-D-01
-                                 already discussed: offers to change one decision
+  /gg:new-project [input]        onboard; vision from your input, roadmap, folders, index, conventions
+  /gg:new-project --folders      set the allowed folders of an onboarded project
+  /gg:discuss M1|M1-P1           your short description first, then grill-me on what stays open;
+                                 decisions M1-D-01, M1-P1-D-01; already discussed: change one
 Loop
   /gg:next                       next step; stops after planning for your review
   /gg:plan M1-P1                 plans, contracts, waves for a phase
   /gg:execute M1-P1 [faster]     build plans: developer + reviewer; "faster" = parallel waves
   /gg:verify M1-P1               QA per contract + ten gates; human checks collected
   /gg:review                     your verdict on collected human checks
-  /gg:complete-milestone M1      producer check, [AI] list, git tag
+  /gg:complete-milestone M1      cleanup round, breaker QA, producer check, decision merge, git tag
   /gg:autonomous M1|M1-P3        run to the goal; stops only for decisions or blockers
 Side paths
   /gg:quick <task>               small task with check-out, reviewer, commit

@@ -6,6 +6,7 @@ open_questions:
 milestones:
   - id: M1
     name: <name>
+    goal: <one sentence: what the human wants from this milestone>
     depends_on: []
     status: planned | active | done
     discussion: none | paused | done

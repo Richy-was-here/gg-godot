@@ -161,13 +161,15 @@ g_docs() {
           if (id !~ /^(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9][0-9]+$/) print "decisions:" NR ": id not <scope>-D-NN: " id
           if (id in line) print "decisions:" NR ": duplicate id " id
           line[id]=NR; d=t($3); if (length(d) > 200) print "decisions:" NR ": decision longer than 200 characters: " id
-          sup[id]=t($4); by[id]=t($5)
-          if (sup[id] !~ /^(-|(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9]+)$/) print "decisions:" NR ": supersedes is not an id or -: " id
+          sup[id]=t($4); gsub(/[ \t]/, "", sup[id]); by[id]=t($5)
+          if (sup[id] !~ /^(-|(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9]+(,(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9]+)*)$/) print "decisions:" NR ": supersedes is not a comma list of ids or -: " id
           if (by[id] !~ /^(-|(P|M[0-9]+|M[0-9]+-P[0-9]+)-D-[0-9]+)$/) print "decisions:" NR ": superseded_by is not an id or -: " id }
         END {
-          for (id in sup) { s=sup[id]; if (s == "-") continue
-            if (!(s in line)) print "decisions: " id " supersedes unknown " s
-            else if (by[s] != id) print "decisions: " s " is superseded by " id " but its superseded_by is " by[s] }
+          for (id in sup) { if (sup[id] == "-") continue
+            k=split(sup[id], ss, ",")
+            for (i=1; i<=k; i++) { s=ss[i]
+              if (!(s in line)) print "decisions: " id " supersedes unknown " s
+              else if (by[s] != id) print "decisions: " s " is superseded by " id " but its superseded_by is " by[s] } }
           for (id in by) { b=by[id]; if (b != "-" && !(b in line)) print "decisions: " id " superseded_by unknown " b }
           if (legacy) print "decisions: " legacy " lines in the old D-NN format (not checked)" > "/dev/stderr" }
       ' "$gd/decisions.md"
@@ -233,7 +235,83 @@ g_docs() {
   if [ -n "$out" ]; then printf '%s\n' "$out"; result docs FAIL; else result docs PASS; fi
 }
 
+folder_patterns() { # config folders, first word of each entry
+  sed -n '/^folders:/,/^[a-z_]*:/p' "$cfg" 2>/dev/null | grep -E '^  - ' | sed 's/^  - //; s/[[:blank:]].*//; s|/$||' | grep -v '^<'
+}
+
+in_folders() { # in_folders <path relative to root> <patterns>: 0 when the path may exist
+  local p=$1 pat re
+  case "$p" in .gamedev/*|tests/qa/*|addons/*|.godot/*|.git/*|.github/*|.claude/*) return 0 ;; esac
+  if [ "${p%/*}" = "$p" ]; then
+    case "$p" in icon.svg|default_bus_layout.tres|default_env.tres) return 0 ;; esac
+    case "$p" in *.gd|*.tscn|*.scn|*.tres|*.res|*.gdshader|*.png|*.jpg|*.jpeg|*.webp|*.svg|*.wav|*.ogg|*.mp3|*.glb|*.gltf|*.blend|*.fbx|*.obj|*.ttf|*.otf) return 1 ;; esac
+    return 0
+  fi
+  while read -r pat; do
+    [ -z "$pat" ] && continue
+    re=$(printf '%s' "$pat" | sed 's/[.]/\\./g; s/\*/[^\/]+/g')
+    printf '%s\n' "$p" | grep -qE "^$re/" && return 0
+  done <<< "$2"
+  return 1
+}
+
+g_folders() {
+  local patterns f bad=0 old=0
+  patterns=$(folder_patterns)
+  if [ -z "$patterns" ]; then result folders PASS; say "no folders in config.md; set them with /gg:new-project --folders"; return; fi
+  while read -r f; do
+    [ -z "$f" ] && continue
+    in_folders "$f" "$patterns" && continue
+    if [ ${#touched[@]} -gt 0 ] && printf '%s\n' "${touched[@]}" | sed 's|^\./||' | grep -qxF "$f"; then say "outside folders: $f"; bad=1; else old=$((old + 1)); fi
+  done < <(git -C "$root" ls-files --cached --others --exclude-standard 2>/dev/null)
+  [ $old -gt 0 ] && say "outside folders, not touched by this change: $old file(s)"
+  [ $bad = 0 ] && result folders PASS || result folders FAIL
+}
+
+g_api() { # every "# API: <subsystem>.<name>" marker has a prepared entry in that subsystem's contract, and back
+  local markers prepared out f
+  markers=$(grep -rhoE '#[[:blank:]]*API:[[:blank:]]*[A-Za-z0-9_]+\.[A-Za-z0-9_]+' "$root" --include='*.gd' --exclude-dir=.godot --exclude-dir=addons --exclude-dir=.gamedev 2>/dev/null | sed 's/.*API:[[:blank:]]*//' | sort -u)
+  prepared=$(for f in "$root"/.gamedev/contracts/*.md; do
+    [ -f "$f" ] || continue
+    awk '/^subsystem:/ { s=$2 } /^prepared:/ { p=1; next } /^[^ ]/ { p=0 } p && /^ *- / { n=$0; sub(/^ *- */, "", n); sub(/:.*/, "", n); if (n !~ /^</) print s "." n }' "$f"
+  done | sort -u)
+  out=$( { comm -23 <(printf '%s\n' "$markers" | grep -v '^$') <(printf '%s\n' "$prepared" | grep -v '^$') | sed 's/^/API marker without prepared entry in a contract: /'
+           comm -13 <(printf '%s\n' "$markers" | grep -v '^$') <(printf '%s\n' "$prepared" | grep -v '^$') | sed 's/^/prepared entry without "# API:" marker in code: /'; } )
+  if [ -n "$out" ]; then printf '%s\n' "$out"; result api FAIL; else result api PASS; fi
+}
+
+g_cleanup() { # candidates for the cleanup round; information only, never fails
+  local idx="$root/.gamedev/index.md" f reasons ca n long unused name count=0
+  while read -r f; do
+    [ -z "$f" ] && continue
+    reasons=""
+    ca=$(grep -hv '^#' "$idx" "$root"/.gamedev/index/*.md 2>/dev/null | awk -F'|' -v F="$f" '{ p=$1; gsub(/^ +| +$/, "", p); if (p == F) { c=$6; gsub(/ /, "", c); print c; exit } }')
+    if [ -z "$ca" ]; then reasons="never cleaned"
+    elif ! git -C "$root" diff --quiet "$ca" HEAD -- "$f" 2>/dev/null; then reasons="changed since $ca"; fi
+    n=$(wc -l < "$root/$f" | tr -d ' ')
+    [ "$n" -gt 300 ] && reasons="${reasons:+$reasons, }$n lines"
+    long=$(awk '
+      function close_f() { if (fn != "" && last - start > 50) printf "%s%s(%d lines)", (out++ ? ", " : ""), fn, last - start; fn="" }
+      /^[[:blank:]]*(static[[:blank:]]+)?func[[:blank:]]/ { close_f(); fn=$0; sub(/^[[:blank:]]*(static[[:blank:]]+)?func[[:blank:]]+/, "", fn); sub(/\(.*/, "", fn); start=NR; last=NR; next }
+      /^[[:blank:]]+[^[:blank:]]/ { last=NR; next }
+      /^[^[:blank:]#]/ { close_f() }
+      END { close_f() }' "$root/$f")
+    [ -n "$long" ] && reasons="${reasons:+$reasons, }long: $long"
+    unused=""
+    for name in $(grep -oE '^[[:blank:]]*(static[[:blank:]]+)?func[[:blank:]]+[A-Za-z][A-Za-z0-9_]*' "$root/$f" | awk '{ print $NF }'); do
+      grep -rqw --include='*.md' "$name" "$root/.gamedev/contracts" 2>/dev/null && continue
+      [ "$(grep -rwo --include='*.gd' --include='*.tscn' --include='*.tres' "$name" "$root" --exclude-dir=.godot --exclude-dir=addons --exclude-dir=.gamedev 2>/dev/null | wc -l | tr -d ' ')" -le 1 ] && unused="${unused:+$unused, }$name"
+    done
+    [ -n "$unused" ] && reasons="${reasons:+$reasons, }unused: $unused"
+    [ -n "$reasons" ] && { say "$f | $reasons"; count=$((count + 1)); }
+  done < <(project_files | grep '\.gd$')
+  say "cleanup candidates: $count"
+}
+
 case "$gate" in
+  cleanup) g_cleanup ;;
+  folders) g_folders ;;
+  api) g_api ;;
   docs) g_docs ;;
   load) g_load ;;
   parse) g_parse ;;
@@ -242,7 +320,7 @@ case "$gate" in
   artifacts) g_artifacts ;;
   index) g_index ;;
   aimarks) g_aimarks ;;
-  all) g_load; g_parse; g_stubs; g_leftovers; g_artifacts; g_index; touched=(); g_docs ;;
-  *) say "usage: gg-check load|parse|stubs|leftovers|artifacts|index|aimarks|docs|all [project_root] [touched files...]"; exit 2 ;;
+  all) g_load; g_parse; g_stubs; g_leftovers; g_artifacts; g_index; g_folders; g_api; touched=(); g_docs ;;
+  *) say "usage: gg-check load|parse|stubs|leftovers|artifacts|index|folders|api|docs|all|aimarks|cleanup [project_root] [touched files...]"; exit 2 ;;
 esac
 exit $fail

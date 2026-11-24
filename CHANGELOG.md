@@ -5,6 +5,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-24
+
+### Added
+- discuss starts with the human's short description of the target, shows what it settles and what stays open, and runs grill-me only on the open branches. The description is stored as the target's `goal`; milestones get a `goal` field.
+- gg-producer task "decision review": before gg-manager records a decision list, each line is marked keep, drop (no effect, duplicate, wrong level) or conflict; the human selects which lines to leave out.
+- gg-producer task "decision merge" at `/gg:complete-milestone`: proposes groups of the milestone's decisions that one line can replace; the human selects which merges to apply.
+- `gg-check cleanup`: lists scripts changed since their `cleaned_at`, over 300 lines, with functions over 50 lines, or with unused functions. Information only.
+- Cleanup round in `/gg:complete-milestone`: the reviewer reads the candidates once and reports `trim` findings, the planner turns them into one cleanup plan, the developer shortens the code, `cleaned_at` is set. Breaker QA runs after it.
+- Index column `cleaned_at`.
+- Contract section `prepared` for extension points, marked in code with one line `# API: <subsystem>.<name>`. `gg-check api` checks both directions and is part of gate 10.
+- config field `folders`: allowed folder patterns for game files, set during onboarding or with `/gg:new-project --folders`. gg-guard refuses new files outside them; `gg-check folders` (part of gate 6) fails on touched files outside and counts the others.
+
+### Changed
+- rules/documents.md defines what is recorded: only lines an agent would otherwise build differently, on the level of the scope; values already in a contract and confirmed derived answers are not recorded.
+- `supersedes` in decisions.md takes several ids separated by commas.
+- gg-manager no longer judges whether a line is a decision; it checks language and length.
+- The reviewer checks leftovers in every diff (old code next to its replacement, commented-out code, helpers no longer used) and the folders of new files. In milestone mode it reads the cleanup candidates and other scripts only where needed.
+- rules/code.md: code a task replaces is deleted in the same task; new files only inside the folders.
+- `/gg:complete-milestone` order: preconditions, gates, review and cleanup, breaker QA, human `done_when`, producer check and decision merge, tag.
+- new-project creates a missing main scene inside the agreed folders.
+
+### Fixed
+- A missing line break in gg-planner.md joined two rules into one line.
+
 ## [0.2.0] - 2026-11-06
 
 ### Added
@@ -60,7 +84,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First release: seven agent roles, 19 commands, roadmap with milestones and phases, file check-out and check-in, nine verify gates, unattended mode.
 
-[Unreleased]: https://github.com/Richy-was-here/gg-godot/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Richy-was-here/gg-godot/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Richy-was-here/gg-godot/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Richy-was-here/gg-godot/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/Richy-was-here/gg-godot/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Richy-was-here/gg-godot/compare/v0.1.0...v0.1.1

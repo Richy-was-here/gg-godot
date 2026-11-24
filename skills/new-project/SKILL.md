@@ -1,7 +1,7 @@
 ---
 name: new-project
 description: Onboard a Godot project into gg. Consolidates any input into a vision, runs the vision interview, creates roadmap, decisions, index, status, conventions and config under .gamedev/. Works for new and existing projects.
-argument-hint: "[text, file paths, or nothing] [--conventions]"
+argument-hint: "[text, file paths, or nothing] [--conventions | --folders]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, AskUserQuestion, WebFetch
 ---
 Plugin root: `${CLAUDE_PLUGIN_ROOT}`. Pass it as "plugin root", together with the session id (see `/gg:resume`), to every agent you spawn; agents find templates, rules and bin/ there.
@@ -12,10 +12,11 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
 
 1. Preconditions
    - `--conventions` given: skip to step 7.
+   - `--folders` given: run only step 5a on an onboarded project, then commit `.gamedev/config.md`.
    - `.gamedev/status.md` exists: stop, "already onboarded; use /gg:status".
    - `project.godot` missing: ask whether to create a minimal one (name, Godot version, main scene later) or stop.
    - Read the Godot version from `project.godot` (`config/features`).
-   - `run/main_scene` missing: ask which scene is the main scene, or create an empty `scenes/main.tscn` (root Node2D or Node3D as the vision says) and set it. The load gate needs it.
+   - `run/main_scene` missing: ask which scene is the main scene, or create an empty main scene after step 5a inside the folders (root Node2D or Node3D as the vision says) and set it. The load gate needs it.
    - `git rev-parse` fails: ask to run `git init`; gg needs commits.
 
 2. Input
@@ -37,6 +38,11 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
    - Write `roadmap.md`: `goal` from the vision; `discussion: done` (or `paused` if the interview was paused) and the project's remaining `open_questions`; milestones with `done_when` split into agent / human, `discussion: none` and the questions the interview deferred to them as `open_questions`. Phases are added by `/gg:discuss <milestone>`; add them now only if the interview produced them.
    - Existing project: set `status: done` on milestones and phases the old planning documents or the code prove finished. Present this derived state to the human for confirmation before writing it.
 
+5a. Folders
+   - New project: propose this layout, following the project organization page of the Godot docs (assets close to the scenes that use them, snake_case names, third-party plugins in `addons/`): `game/*` one folder per subsystem with its scenes, scripts, resources and assets; `game/shared` for what several subsystems use; `game/main` for the main scene and autoloads; `tests` for tests that stay. Ask with AskUserQuestion: take it | change it (the human types the layout).
+   - Existing project: derive the patterns from the current directories, show them, and ask the same way. Files outside the agreed folders are listed; they are not moved, because moving breaks `res://` paths. The human decides whether to move them in the Godot editor.
+   - Write the patterns to `folders` in `config.md` (create it from the template if step 8 has not run yet). `.gamedev/`, `tests/qa/`, `addons/` and the usual root files are always allowed.
+
 6. Index
    - List every `*.gd`, `*.tscn`, `*.tres`, `*.gdshader` outside `.godot/`, `addons/`, `.gamedev/`. Assign `subsystem` from directory names; ask only when the structure gives no answer. Documents under `.gamedev/` are indexed as `doc`. One line per file. Above 150 lines, split per subsystem as `index/<subsystem>.md` and keep one line per index file in `index.md`.
 
@@ -46,7 +52,7 @@ Templates: `${CLAUDE_PLUGIN_ROOT}/templates/`. Field names are used unchanged. N
    - `--conventions`: run only this step, keeping `project_specific`; used after a Godot version change.
 
 8. Config and status
-   - `config.md`: `godot_bin` (`which godot` or ask), `godot_version`, `test_dir: tests/qa`, `allowed_external` empty, `shared_files` (project.godot, autoload scripts found in `[autoload]`, input map files).
+   - `config.md`: `godot_bin` (`which godot` or ask), `godot_version`, `test_dir: tests/qa`, `folders` from step 5a, `allowed_external` empty, `shared_files` (project.godot, autoload scripts found in `[autoload]`, input map files).
    - `status.md` and `human-checks.md` from the templates, `active` empty.
    - Create `.gamedev/.gdignore` (empty) and `tests/qa/.gdignore` (empty). Add `.gamedev/.lock/` to `.gitignore`.
    - Offer once (AskUserQuestion): add permission rules to `.claude/settings.local.json` so agents run without prompts: `Bash(git *)`, `Bash(<godot_bin> *)`, `Bash(gg-check *)`, `Bash(gg-lock *)`, `Bash(*/bin/gg-check *)`, `Bash(*/bin/gg-lock *)`, `Bash(rm tests/qa/*)`. Without them every agent Bash call asks; `/gg:autonomous` cannot run unattended.

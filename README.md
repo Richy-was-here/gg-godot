@@ -10,8 +10,11 @@ gg descends from [GSD](https://github.com/open-gsd/get-shit-done-redux) and [bui
 - The roadmap holds milestones and phases. Each phase has `done_when` criteria, split into what an agent can check and what only you can judge.
 - The planner writes a contract per subsystem. A QA agent tests the subsystem against that contract with a throwaway headless script. The QA agent has no access to the code or the documents.
 - `/gg:verify` runs ten gates: the project loads headless, all scripts parse, no stubs, QA passed, every decision is traceable in the diff, the file index is consistent, no leftover test files, phase criteria met, no dead code or debug prints, the documents follow their templates and limits. A warning fails the gate.
-- Decisions carry their scope in the id: `P-D-01` for the project, `M2-D-01` for milestone 2, `M2-P3-D-01` for its third phase.
-- Plugin hooks enforce the main rules: no Python, Node or other interpreters in agent shell calls, files are written only with the Write and Edit tools, `.gamedev/` holds only the documents of the layout, and every gg command ends with the line that names the next command.
+- `/gg:discuss` starts with your own short description of a milestone or phase and asks only about what it leaves open.
+- Decisions carry their scope in the id: `P-D-01` for the project, `M2-D-01` for milestone 2, `M2-P3-D-01` for its third phase. A line is recorded only if an agent without it would build something different. The producer agent reviews every list before it is recorded and proposes merges at the end of each milestone.
+- Plugin hooks enforce the main rules: no Python, Node or other interpreters in agent shell calls, files are written only with the Write and Edit tools, `.gamedev/` holds only the documents of the layout, new files go only into the folders set at onboarding, and every gg command ends with the line that names the next command.
+- Each milestone ends with a cleanup round. A script is read for it only when it changed since the last round, is over the size limits or has unused functions.
+- Interfaces prepared for later are listed in the contract and marked in the code with one `# API:` line, so later work can find them.
 - Files are checked out to a plan before an agent writes them. Plans with disjoint file sets run in parallel; shared files such as `project.godot` and autoloads never do. Two Claude Code sessions can work on one project.
 - `/gg:autonomous` runs phases unattended to a goal you set. It collects everything that needs your judgement and stops only for a decision or a blocker. `/gg:review` takes your verdicts afterwards.
 - Creative in-game text is written as a placeholder marked `[AI]`. AI-made graphics and sounds are listed in one file so you can replace them later.
